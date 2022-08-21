@@ -18,7 +18,7 @@ func NewPosts(db *sql.DB) *Posts {
 }
 
 func (b *Posts) Create(ctx context.Context, post domain.Post) error {
-	_, err := b.db.Exec("INSERT INTO posts (title, body) values ($1, $2)",
+	_, err := b.db.ExecContext(ctx, "INSERT INTO posts (title, body) values ($1, $2)",
 		post.Title, post.Body)
 
 	return err
@@ -26,7 +26,7 @@ func (b *Posts) Create(ctx context.Context, post domain.Post) error {
 
 func (b *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 	var post domain.Post
-	err := b.db.QueryRow("SELECT id, title, body, date, updated FROM posts WHERE id=$1", id).
+	err := b.db.QueryRowContext(ctx, "SELECT id, title, body, date, updated FROM posts WHERE id=$1", id).
 		Scan(&post.Id, &post.Title, &post.Body, &post.Date, &post.Updated)
 	if err == sql.ErrNoRows {
 		return post, domain.ErrPostNotFound
@@ -36,7 +36,7 @@ func (b *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 }
 
 func (b *Posts) GetAll(ctx context.Context) ([]domain.Post, error) {
-	rows, err := b.db.Query("SELECT id, title, body, date, updated FROM posts")
+	rows, err := b.db.QueryContext(ctx, "SELECT id, title, body, date, updated FROM posts")
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (b *Posts) GetAll(ctx context.Context) ([]domain.Post, error) {
 }
 
 func (b *Posts) Delete(ctx context.Context, id int64) error {
-	_, err := b.db.Exec("DELETE FROM posts WHERE id=$1", id)
+	_, err := b.db.ExecContext(ctx, "DELETE FROM posts WHERE id=$1", id)
 	return err
 }
 
@@ -84,6 +84,6 @@ func (b *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 
 	query := fmt.Sprintf("UPDATE posts SET %s WHERE id=$%d", setQuery, argId)
 	args = append(args, id)
-	_, err := b.db.Exec(query, args...)
+	_, err := b.db.ExecContext(ctx, query, args...)
 	return err
 }
