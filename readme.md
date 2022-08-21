@@ -12,3 +12,7 @@ _________________________________________________
 ```
 _________________________________________________
 
+### Swagger docs 
+
+to update need to run command: swag init -g cmd/main.go
+![swagger.png](swagger.png)

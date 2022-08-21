@@ -17,6 +17,11 @@ type Post struct {
 	Updated time.Time `json:"lastUpdated"`
 }
 
+type PostQuery struct {
+	Title string `json:"title"`
+	Body  string `json:"body"`
+}
+
 type UpdatePost struct {
 	Id    int64   `json:"id"`
 	Title *string `json:"title"`
