@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Arkosh744/simpleREST_blog/internal/config"
 	"github.com/Arkosh744/simpleREST_blog/internal/repository"
 	"github.com/Arkosh744/simpleREST_blog/internal/service"
 	"github.com/Arkosh744/simpleREST_blog/internal/transport/rest"
@@ -13,14 +14,18 @@ import (
 )
 
 func main() {
+	cfg, err := config.New("configs", "app.env")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db, err := database.NewPostgresConnection(database.ConnectionInfo{
-		Host:     "localhost",
-		Port:     5432,
-		Username: "postgres",
-		DBName:   "postgres",
-		SSLMode:  "disable",
-		Password: "docker",
+		Host:     cfg.DBHost,
+		Port:     cfg.DBPort,
+		Username: cfg.DBUser,
+		DBName:   cfg.DBName,
+		SSLMode:  cfg.DBSSLMode,
+		Password: cfg.DBPassword,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +38,7 @@ func main() {
 
 	// init & run server
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + cfg.SrvPort,
 		Handler:      handler.InitRouter(),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
