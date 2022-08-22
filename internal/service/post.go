@@ -26,7 +26,7 @@ func NewPosts(repo PostsRepository) *Posts {
 
 func (p *Posts) Create(ctx context.Context, post domain.Post) error {
 	post.Date = time.Now()
-	post.Updated = time.Now()
+	post.Updated = post.Date
 	return p.repo.Create(ctx, post)
 }
 
