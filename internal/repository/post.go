@@ -64,6 +64,11 @@ func (b *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 	args := make([]any, 0)
 	argId := 1
 
+	_, err := b.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+
 	if post.Title != nil {
 		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
 		args = append(args, *post.Title)
@@ -84,6 +89,7 @@ func (b *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 
 	query := fmt.Sprintf("UPDATE posts SET %s WHERE id=$%d", setQuery, argId)
 	args = append(args, id)
-	_, err := b.db.ExecContext(ctx, query, args...)
+	res, err := b.db.ExecContext(ctx, query, args...)
+	fmt.Println(res, err)
 	return err
 }

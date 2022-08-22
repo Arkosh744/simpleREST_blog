@@ -116,7 +116,8 @@ paths:
       responses:
         "200":
           description: OK
-          schema: {}
+          schema:
+            $ref: '#/definitions/domain.Post'
       summary: Create new post
       tags:
       - posts
