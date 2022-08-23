@@ -31,6 +31,8 @@ func NewHandler(posts Posts) *Handler {
 func (h *Handler) InitRouter() *gin.Engine {
 	router := gin.New()
 
+	router.Use(loggerMiddleware())
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	post := router.Group("/post")
 	{

@@ -3,9 +3,10 @@ package rest
 import (
 	"github.com/Arkosh744/simpleREST_blog/internal/domain"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // New Post godoc
@@ -18,17 +19,15 @@ import (
 // @Success 200 {object} domain.Post
 // @Router /post/new [post]
 func (h *Handler) NewPost(c *gin.Context) {
-
 	var post domain.Post
 	if err := c.BindJSON(&post); err != nil {
+		log.WithFields(log.Fields{
+			"handler": "NewPost",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
 		return
 	}
 
-	if err := h.postServices.Create(c, post); err != nil {
-		c.String(http.StatusBadRequest, "Bad Request: %s", err)
-		return
-	}
 	c.JSON(http.StatusCreated, map[string]interface{}{
 		"title": post.Title,
 		"body":  post.Body,
@@ -46,17 +45,13 @@ func (h *Handler) NewPost(c *gin.Context) {
 func (h *Handler) GetAllPosts(c *gin.Context) {
 	posts, err := h.postServices.GetAll(c)
 	if err != nil {
-		log.Println("getAllPosts() error:", err)
+		log.WithFields(log.Fields{
+			"handler": "GetAllPosts",
+		}).Error(err)
 		c.String(http.StatusInternalServerError, "InternalServerError: %s", err)
 		return
 	}
 
-	//response, err := json.Marshal(posts)
-	//if err != nil {
-	//	log.Println("getAllPosts() error:", err)
-	//	c.String(http.StatusInternalServerError, "InternalServerError: %s", err)
-	//	return
-	//}
 	c.JSON(http.StatusOK, posts)
 }
 
@@ -72,14 +67,18 @@ func (h *Handler) GetAllPosts(c *gin.Context) {
 func (h *Handler) GetPostById(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		log.Println("GetPostById() error:", err)
+		log.WithFields(log.Fields{
+			"handler": "GetPostById",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "Invalid id - ensure it is a number")
 		return
 	}
 
 	posts, err := h.postServices.GetById(c, id)
 	if err != nil {
-		log.Println("GetPostById() error:", err)
+		log.WithFields(log.Fields{
+			"handler": "GetPostById",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "getPostbyId() error: %s", err)
 		return
 	}
@@ -111,11 +110,17 @@ func (h *Handler) GetPostById(c *gin.Context) {
 func (h *Handler) UpdatePostById(c *gin.Context) {
 	var post *domain.UpdatePost
 	if err := c.BindJSON(&post); err != nil {
+		log.WithFields(log.Fields{
+			"handler": "UpdatePostById",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
 		return
 	}
 
 	if err := h.postServices.Update(c, post.Id, post); err != nil {
+		log.WithFields(log.Fields{
+			"handler": "UpdatePostById",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "update() error: %s", err)
 		return
 	}
@@ -138,11 +143,17 @@ func (h *Handler) UpdatePostById(c *gin.Context) {
 func (h *Handler) DeletePostById(c *gin.Context) {
 	var post *domain.UpdatePost
 	if err := c.BindJSON(&post); err != nil {
+		log.WithFields(log.Fields{
+			"handler": "DeletePostById",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
 		return
 	}
 
 	if err := h.postServices.Delete(c, post.Id); err != nil {
+		log.WithFields(log.Fields{
+			"handler": "DeletePostById",
+		}).Error(err)
 		c.String(http.StatusBadRequest, "delete() error: %s", err)
 		return
 	}
