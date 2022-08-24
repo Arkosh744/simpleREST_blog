@@ -89,7 +89,6 @@ func (b *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 
 	query := fmt.Sprintf("UPDATE posts SET %s WHERE id=$%d", setQuery, argId)
 	args = append(args, id)
-	res, err := b.db.ExecContext(ctx, query, args...)
-	fmt.Println(res, err)
+	_, err = b.db.ExecContext(ctx, query, args...)
 	return err
 }
