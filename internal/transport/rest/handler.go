@@ -34,11 +34,11 @@ func (h *Handler) InitRouter() *gin.Engine {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	post := router.Group("/post")
 	{
-		post.POST("/new", h.NewPost)
-		post.GET("/all", h.GetAllPosts)
-		post.GET("/get/:id", h.GetPostById)
-		post.POST("/update", h.UpdatePostById)
-		post.POST("/delete", h.DeletePostById)
+		post.POST("", h.Create)
+		post.GET("", h.List)
+		post.GET("/:id", h.GetById)
+		post.PUT("", h.UpdateById)
+		post.DELETE("", h.DeleteById)
 	}
 	return router
 }
