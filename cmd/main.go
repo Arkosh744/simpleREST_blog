@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	cache "github.com/Arkosh744/FirstCache"
 	_ "github.com/lib/pq"
 )
 
@@ -38,7 +39,8 @@ func main() {
 
 	postsRepo := repository.NewPosts(db)
 	postService := service.NewPosts(postsRepo)
-	handler := rest.NewHandler(postService)
+	handlerCache := cache.NewCache()
+	handler := rest.NewHandler(postService, handlerCache)
 
 	// init & run server
 	srv := &http.Server{

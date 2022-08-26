@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	customCache "github.com/Arkosh744/FirstCache"
 	"github.com/Arkosh744/simpleREST_blog/internal/domain"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -19,12 +20,14 @@ type Posts interface {
 }
 
 type Handler struct {
-	postServices Posts
+	postServices  Posts
+	cacheServices *customCache.Cache
 }
 
-func NewHandler(posts Posts) *Handler {
+func NewHandler(posts Posts, cache *customCache.Cache) *Handler {
 	return &Handler{
-		postServices: posts,
+		postServices:  posts,
+		cacheServices: cache,
 	}
 }
 

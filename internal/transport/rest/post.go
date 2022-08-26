@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // New Post godoc
@@ -24,7 +25,7 @@ func (h *Handler) Create(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
 		return
 	}
-
+	h.cacheServices.Set(strconv.FormatInt(post.Id, 10), post, time.Second*360, c)
 	if err := h.postServices.Create(c, post); err != nil {
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
 		return
@@ -50,6 +51,11 @@ func (h *Handler) List(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "InternalServerError: %s", err)
 		return
 	}
+	for _, item := range posts {
+		if _, err := h.cacheServices.Get(strconv.FormatInt(item.Id, 10)); err != nil {
+			h.cacheServices.Set(strconv.FormatInt(item.Id, 10), item, time.Second*360, c)
+		}
+	}
 	c.JSON(http.StatusOK, posts)
 }
 
@@ -70,13 +76,19 @@ func (h *Handler) GetById(c *gin.Context) {
 		return
 	}
 
-	posts, err := h.postServices.GetById(c, id)
-	if err != nil {
-		log.Println("GetById() error:", err)
-		c.String(http.StatusBadRequest, "getbyId() error: %s", err)
+	if post, err := h.cacheServices.Get(strconv.FormatInt(id, 10)); err == nil {
+		c.JSON(http.StatusOK, post)
+		return
+	} else {
+		post, err := h.postServices.GetById(c, id)
+		if err != nil {
+			log.Println("GetById() error:", err)
+			c.String(http.StatusBadRequest, "getbyId() error: %s", err)
+			return
+		}
+		c.JSON(http.StatusOK, post)
 		return
 	}
-	c.JSON(http.StatusOK, posts)
 }
 
 // Update post by ID godoc
@@ -94,11 +106,11 @@ func (h *Handler) UpdateById(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
 		return
 	}
-
 	if err := h.postServices.Update(c, post.Id, post); err != nil {
 		c.String(http.StatusBadRequest, "update() error: %s", err)
 		return
 	}
+	h.cacheServices.Set(strconv.FormatInt(post.Id, 10), post, time.Second*360, c)
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id":    post.Id,
 		"title": post.Title,
@@ -123,8 +135,17 @@ func (h *Handler) DeleteById(c *gin.Context) {
 	}
 
 	if err := h.postServices.Delete(c, post.Id); err != nil {
-		c.String(http.StatusBadRequest, "delete() error: %s", err)
+		c.String(http.StatusBadRequest, "Delete() error: %s", err)
 		return
 	}
+
+	if _, err := h.cacheServices.Get(strconv.FormatInt(post.Id, 10)); err == nil {
+		err := h.cacheServices.Delete(strconv.FormatInt(post.Id, 10))
+		if err != nil {
+			log.Println("Delete() Cache error:", err)
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, "Deleted")
 }
