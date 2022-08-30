@@ -23,7 +23,7 @@ import (
 // @termsOfService http://swagger.io/terms/
 // @host localhost:8080
 func main() {
-	cfg, err := config.New("configs", "app.env")
+	cfg, err := config.New("configs")
 	if err != nil {
 		log.Fatal(err)
 	}

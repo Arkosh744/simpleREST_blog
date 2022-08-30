@@ -14,9 +14,10 @@ type Config struct {
 	SrvPort    string `mapstructure:"SRV_PORT"`
 }
 
-func New(folder, filename string) (*Config, error) {
+func New(folder string) (*Config, error) {
 	cfg := new(Config)
-	viper.SetConfigName(filename)
+	viper.SetConfigName("app")
+	viper.SetConfigType("env")
 	viper.AddConfigPath(folder)
 
 	if err := viper.ReadInConfig(); err != nil {
