@@ -18,7 +18,6 @@ import (
 // @Success 200 {object} domain.Post
 // @Router /post/new [post]
 func (h *Handler) Create(c *gin.Context) {
-
 	var post domain.Post
 	if err := c.BindJSON(&post); err != nil {
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
