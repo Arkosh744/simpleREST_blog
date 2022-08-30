@@ -1,14 +1,30 @@
 package rest
 
 import (
-	"log"
-	"net/http"
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
-func loggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s", r.Method, r.URL.Path)
-		next(w, r)
+func loggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		startTime := time.Now()
+		// to process the request
+		c.Next()
+		// End time
+		endTime := time.Now()
+		// Execution time
+		latencyTime := endTime.Sub(startTime)
+		// Request method
+		reqMethod := c.Request.Method
+		// Request routing
+		reqUri := c.Request.RequestURI
+		// Status code
+		statusCode := c.Writer.Status()
+		// The requestIP
+		clientIP := c.ClientIP()
+		// Log format
+		log.Infof("| %3d | %13v | %15s | %s | %s |",
+			statusCode, latencyTime, clientIP, reqMethod, reqUri)
 	}
-
 }

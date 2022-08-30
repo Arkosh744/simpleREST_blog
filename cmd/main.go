@@ -6,12 +6,19 @@ import (
 	"github.com/Arkosh744/simpleREST_blog/internal/service"
 	"github.com/Arkosh744/simpleREST_blog/internal/transport/rest"
 	"github.com/Arkosh744/simpleREST_blog/pkg/database"
-	"log"
 	"net/http"
+	"os"
 	"time"
 
 	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+}
 
 // @title Note-taking API
 // @version 1.0
@@ -53,7 +60,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Println("SERVER STARTED AT", time.Now().Format(time.RFC3339))
+	log.Info("SERVER STARTED")
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf(err.Error())
