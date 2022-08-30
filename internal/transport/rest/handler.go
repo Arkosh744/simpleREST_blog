@@ -10,6 +10,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	_ "github.com/Arkosh744/simpleREST_blog/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Posts interface {
@@ -32,6 +36,7 @@ func NewHandler(posts Posts) *Handler {
 
 func (h *Handler) InitRouter() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/swagger/", loggerMiddleware(httpSwagger.WrapHandler))
 	mux.HandleFunc("/post/new", loggerMiddleware(h.NewPost))
 	mux.HandleFunc("/post/all", loggerMiddleware(h.GetAllPosts))
 	mux.HandleFunc("/post/get/", loggerMiddleware(h.GetPostById))
@@ -40,6 +45,15 @@ func (h *Handler) InitRouter() http.Handler {
 	return mux
 }
 
+// New Post godoc
+// @Summary Create new post
+// @Description Create new post with title and content
+// @Tags posts
+// @Accept  json
+// @Produce  json
+// @Param new post body domain.PostQuery true "new post"
+// @Success 200 {object} Posts
+// @Router /post/new [post]
 func (h *Handler) NewPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		reqBytes, err := io.ReadAll(r.Body)
@@ -68,6 +82,14 @@ func (h *Handler) NewPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Get posts by ID godoc
+// @Summary Get details of a post
+// @Description Get details of a post by ID
+// @Tags posts
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} []domain.Post
+// @Router /post/all [get]
 func (h *Handler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Header().Add("Content-Type", "application/json")
@@ -95,6 +117,15 @@ func (h *Handler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get post by ID godoc
+// @Summary Get details of a post
+// @Description Get details of a post by ID
+// @Tags posts
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Post ID"
+// @Success 200 {object} domain.Post
+// @Router /post/get/{id} [get]
 func (h *Handler) GetPostById(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
@@ -139,6 +170,15 @@ func (h *Handler) GetPostById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Update post by ID godoc
+// @Summary Get details of a post
+// @Description Get details of a post by ID
+// @Tags posts
+// @Accept  json
+// @Produce  json
+// @Param updatePost body domain.UpdatePost true "update post"
+// @Success 200 {object} domain.Post
+// @Router /post/update [post]
 func (h *Handler) UpdatePostById(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
@@ -167,6 +207,15 @@ func (h *Handler) UpdatePostById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Delete post by ID godoc
+// @Summary Delete a post
+// @Description Delete a post by ID
+// @Tags posts
+// @Accept  json
+// @Produce  json
+// @Param id body domain.Post true "id"
+// @Success 200 {string} string "Post deleted"
+// @Router /post/delete [post]
 func (h *Handler) DeletePostById(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 

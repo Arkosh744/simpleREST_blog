@@ -1,0 +1,145 @@
+basePath: /
+definitions:
+  domain.Post:
+    properties:
+      body:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      lastUpdated:
+        type: string
+      title:
+        type: string
+    type: object
+  domain.PostQuery:
+    properties:
+      body:
+        type: string
+      title:
+        type: string
+    type: object
+  domain.UpdatePost:
+    properties:
+      body:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a simple crud blog for note-taking
+  termsOfService: http://swagger.io/terms/
+  title: Note-taking API
+  version: "1.0"
+paths:
+  /post/all:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a post by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/domain.Post'
+              type: array
+            type: array
+      summary: Get details of a post
+      tags:
+      - posts
+  /post/delete:
+    post:
+      consumes:
+      - application/json
+      description: Delete a post by ID
+      parameters:
+      - description: id
+        in: body
+        name: id
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Post'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post deleted
+          schema:
+            type: string
+      summary: Delete a post
+      tags:
+      - posts
+  /post/get/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a post by ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Post'
+      summary: Get details of a post
+      tags:
+      - posts
+  /post/new:
+    post:
+      consumes:
+      - application/json
+      description: Create new post with title and content
+      parameters:
+      - description: new post
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/domain.PostQuery'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+      summary: Create new post
+      tags:
+      - posts
+  /post/update:
+    post:
+      consumes:
+      - application/json
+      description: Get details of a post by ID
+      parameters:
+      - description: update post
+        in: body
+        name: updatePost
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdatePost'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Post'
+      summary: Get details of a post
+      tags:
+      - posts
+swagger: "2.0"

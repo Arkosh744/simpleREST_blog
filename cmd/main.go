@@ -13,6 +13,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// @title Note-taking API
+// @version 1.0
+// @description This is a simple crud blog for note-taking
+
+// @host localhost:8080
+// @BasePath /
+
+// @termsOfService http://swagger.io/terms/
+// @host localhost:8080
 func main() {
 	cfg, err := config.New("configs", "app.env")
 	if err != nil {
