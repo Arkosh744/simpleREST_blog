@@ -18,7 +18,7 @@ import (
 // @Param new post body domain.PostQuery true "new post"
 // @Success 200 {object} domain.Post
 // @Router /post/new [post]
-func (h *Handler) NewPost(c *gin.Context) {
+func (h *Handler) Create(c *gin.Context) {
 	var post domain.Post
 	if err := c.BindJSON(&post); err != nil {
 		log.WithFields(log.Fields{
