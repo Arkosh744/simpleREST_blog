@@ -139,7 +139,9 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {}
+                        "schema": {
+                            "$ref": "#/definitions/domain.Post"
+                        }
                     }
                 }
             }
