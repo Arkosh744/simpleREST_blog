@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	customCache "github.com/Arkosh744/FirstCache"
 	"github.com/Arkosh744/simpleREST_blog/internal/domain"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -14,20 +13,18 @@ import (
 type Posts interface {
 	Create(ctx context.Context, post domain.Post) error
 	GetById(ctx context.Context, id int64) (domain.Post, error)
-	GetAll(ctx context.Context) ([]domain.Post, error)
+	List(ctx context.Context) ([]domain.Post, error)
 	Delete(ctx context.Context, id int64) error
 	Update(ctx context.Context, id int64, post *domain.UpdatePost) error
 }
 
 type Handler struct {
-	postServices  Posts
-	cacheServices *customCache.Cache
+	postServices Posts
 }
 
-func NewHandler(posts Posts, cache *customCache.Cache) *Handler {
+func NewHandler(posts Posts) *Handler {
 	return &Handler{
-		postServices:  posts,
-		cacheServices: cache,
+		postServices: posts,
 	}
 }
 

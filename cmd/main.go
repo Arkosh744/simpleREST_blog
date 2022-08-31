@@ -38,9 +38,9 @@ func main() {
 	defer db.Close()
 
 	postsRepo := repository.NewPosts(db)
-	postService := service.NewPosts(postsRepo)
 	handlerCache := cache.NewCache()
-	handler := rest.NewHandler(postService, handlerCache)
+	postService := service.NewPosts(postsRepo, handlerCache)
+	handler := rest.NewHandler(postService)
 
 	// init & run server
 	srv := &http.Server{
