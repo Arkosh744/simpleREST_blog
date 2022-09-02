@@ -6,6 +6,7 @@ import (
 	"github.com/Arkosh744/simpleREST_blog/internal/service"
 	"github.com/Arkosh744/simpleREST_blog/internal/transport/rest"
 	"github.com/Arkosh744/simpleREST_blog/pkg/database"
+	"github.com/Arkosh744/simpleREST_blog/pkg/hash"
 	"net/http"
 	"os"
 	"time"
@@ -48,9 +49,15 @@ func main() {
 	}
 	defer db.Close()
 
+	hasher := hash.NewSHA1Hasher("Salty Salt")
+
 	postsRepo := repository.NewPosts(db)
+	usersRepo := repository.NewUsers(db)
+
 	postService := service.NewPosts(postsRepo)
-	handler := rest.NewHandler(postService)
+	usersService := service.NewUsers(usersRepo, hasher, []byte(cfg.JWTSecret))
+
+	handler := rest.NewHandler(postService, usersService)
 
 	// init & run server
 	srv := &http.Server{

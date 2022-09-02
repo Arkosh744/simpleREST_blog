@@ -18,13 +18,21 @@ type Posts interface {
 	Update(ctx context.Context, id int64, post *domain.UpdatePost) error
 }
 
-type Handler struct {
-	postServices Posts
+type Users interface {
+	SignUp(ctx context.Context, inp domain.SignUpInput) error
+	SignIn(ctx context.Context, inp domain.SignInInput) (string, error)
+	ParseToken(ctx context.Context, token string) (int64, error)
 }
 
-func NewHandler(posts Posts) *Handler {
+type Handler struct {
+	postsService Posts
+	usersService Users
+}
+
+func NewHandler(posts Posts, users Users) *Handler {
 	return &Handler{
-		postServices: posts,
+		postsService: posts,
+		usersService: users,
 	}
 }
 
@@ -34,8 +42,14 @@ func (h *Handler) InitRouter() *gin.Engine {
 	router.Use(loggerMiddleware())
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	auth := router.Group("/auth")
+	{
+		auth.POST("sign-up", h.signUp)
+		auth.POST("sign-in", h.signIn)
+	}
 	post := router.Group("/post")
 	{
+		post.Use(h.authMiddleware())
 		post.POST("", h.Create)
 		post.GET("", h.List)
 		post.GET("/:id", h.GetById)

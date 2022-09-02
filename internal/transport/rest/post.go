@@ -42,7 +42,7 @@ func (h *Handler) Create(c *gin.Context) {
 // @Success 200 {array} []domain.Post
 // @Router /post/all [get]
 func (h *Handler) List(c *gin.Context) {
-	posts, err := h.postServices.GetAll(c)
+	posts, err := h.postsService.GetAll(c)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"handler": "GetAllPosts",
@@ -73,7 +73,7 @@ func (h *Handler) GetById(c *gin.Context) {
 		return
 	}
 
-	posts, err := h.postServices.GetById(c, id)
+	posts, err := h.postsService.GetById(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"handler": "GetPostById",
@@ -116,7 +116,7 @@ func (h *Handler) UpdateById(c *gin.Context) {
 		return
 	}
 
-	if err := h.postServices.Update(c, post.Id, post); err != nil {
+	if err := h.postsService.Update(c, post.Id, post); err != nil {
 		log.WithFields(log.Fields{
 			"handler": "UpdatePostById",
 		}).Error(err)
@@ -149,7 +149,7 @@ func (h *Handler) DeleteById(c *gin.Context) {
 		return
 	}
 
-	if err := h.postServices.Delete(c, post.Id); err != nil {
+	if err := h.postsService.Delete(c, post.Id); err != nil {
 		log.WithFields(log.Fields{
 			"handler": "DeletePostById",
 		}).Error(err)
