@@ -30,7 +30,6 @@ func loggerMiddleware() gin.HandlerFunc {
 		// Log format
 		log.Infof("| %3d | %13v | %15s | %s | %s |",
 			statusCode, latencyTime, clientIP, reqMethod, reqUri)
-		c.Next()
 	}
 }
 
@@ -54,17 +53,21 @@ func (h *Handler) authMiddleware() gin.HandlerFunc {
 		// Set context value
 		c.Set(string(rune(ctxUserID)), userId)
 		c.Next()
+
 	}
 }
 
 func getTokenFromContex(c *gin.Context) (string, error) {
-	header := c.Request.Header["Authorization"][0]
+	header := c.Request.Header["Authorization"]
+	if len(header) == 0 {
+		return "", errors.New("no token in header")
+	}
 	log.Println("header", header)
-	if header == "" {
+	if header[0] == "" {
 		return "", errors.New("empty auth header")
 	}
 
-	headerParts := strings.Split(header, " ")
+	headerParts := strings.Split(header[0], " ")
 	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
 		return "", errors.New("invalid auth header")
 	}

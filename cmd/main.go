@@ -53,9 +53,10 @@ func main() {
 
 	postsRepo := repository.NewPosts(db)
 	usersRepo := repository.NewUsers(db)
+	tokensRepo := repository.NewTokens(db)
 
 	postService := service.NewPosts(postsRepo)
-	usersService := service.NewUsers(usersRepo, hasher, []byte(cfg.JWTSecret))
+	usersService := service.NewUsers(usersRepo, tokensRepo, hasher, []byte(cfg.JWTSecret))
 
 	handler := rest.NewHandler(postService, usersService)
 

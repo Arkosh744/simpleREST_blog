@@ -20,8 +20,9 @@ type Posts interface {
 
 type Users interface {
 	SignUp(ctx context.Context, inp domain.SignUpInput) error
-	SignIn(ctx context.Context, inp domain.SignInInput) (string, error)
+	SignIn(ctx context.Context, inp domain.SignInInput) (string, string, error)
 	ParseToken(ctx context.Context, token string) (int64, error)
+	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 type Handler struct {
@@ -38,14 +39,12 @@ func NewHandler(posts Posts, users Users) *Handler {
 
 func (h *Handler) InitRouter() *gin.Engine {
 	router := gin.New()
-
-	router.Use(loggerMiddleware())
-
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	auth := router.Group("/auth")
 	{
-		auth.POST("sign-up", h.signUp)
-		auth.POST("sign-in", h.signIn)
+		auth.POST("/sign-up", h.signUp)
+		auth.POST("/sign-in", h.signIn)
+		auth.GET("/refresh", h.signIn)
 	}
 	post := router.Group("/post")
 	{
@@ -56,5 +55,6 @@ func (h *Handler) InitRouter() *gin.Engine {
 		post.PUT("", h.UpdateById)
 		post.DELETE("", h.DeleteById)
 	}
+	router.Use(loggerMiddleware())
 	return router
 }
