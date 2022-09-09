@@ -12,10 +12,10 @@ import (
 
 type Posts interface {
 	Create(ctx context.Context, post domain.Post) error
-	GetById(ctx context.Context, id int64) (domain.Post, error)
-	GetAll(ctx context.Context) ([]domain.Post, error)
-	Delete(ctx context.Context, id int64) error
-	Update(ctx context.Context, id int64, post *domain.UpdatePost) error
+	GetById(ctx context.Context, id int64, userId int64) (domain.Post, error)
+	List(ctx context.Context, userId int64) ([]domain.Post, error)
+	Delete(ctx context.Context, id int64, userId int64) error
+	Update(ctx context.Context, id int64, post *domain.UpdatePost, userId int64) error
 }
 
 type Users interface {
@@ -23,6 +23,7 @@ type Users interface {
 	SignIn(ctx context.Context, inp domain.SignInInput) (string, string, error)
 	ParseToken(ctx context.Context, token string) (int64, error)
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
+	GetIdByToken(ctx context.Context, refreshToken string) (int64, error)
 }
 
 type Handler struct {
@@ -44,7 +45,7 @@ func (h *Handler) InitRouter() *gin.Engine {
 	{
 		auth.POST("/sign-up", h.signUp)
 		auth.POST("/sign-in", h.signIn)
-		auth.GET("/refresh", h.signIn)
+		auth.GET("/refresh", h.refresh)
 	}
 	post := router.Group("/post")
 	{

@@ -17,11 +17,10 @@ func NewPosts(db *sql.DB) *Posts {
 	return &Posts{db}
 }
 
-func (r *Posts) Create(ctx context.Context, post domain.Post) error {
-	_, err := r.db.ExecContext(ctx, "INSERT INTO posts (title, body) values ($1, $2)",
-		post.Title, post.Body)
-
-	return err
+func (r *Posts) Create(ctx context.Context, post domain.Post) (domain.Post, error) {
+	err := r.db.QueryRowContext(ctx, "INSERT INTO posts (title, body, author_id) values ($1, $2, $3) returning id",
+		post.Title, post.Body, post.AuthorId).Scan(&post.Id)
+	return post, err
 }
 
 func (r *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
@@ -35,7 +34,7 @@ func (r *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 	return post, err
 }
 
-func (r *Posts) GetAll(ctx context.Context) ([]domain.Post, error) {
+func (r *Posts) List(ctx context.Context) ([]domain.Post, error) {
 	rows, err := r.db.QueryContext(ctx, "SELECT id, title, body, \"createdAt\", \"updatedAt\" FROM posts")
 	if err != nil {
 		return nil, err
@@ -81,7 +80,7 @@ func (r *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 		argId++
 	}
 
-	setValues = append(setValues, fmt.Sprintf("updatedAt=$%d", argId))
+	setValues = append(setValues, fmt.Sprintf("\"updatedAt\"=$%d", argId))
 	args = append(args, time.Now())
 	argId++
 

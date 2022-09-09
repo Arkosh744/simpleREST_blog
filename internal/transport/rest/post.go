@@ -21,10 +21,22 @@ import (
 func (h *Handler) Create(c *gin.Context) {
 	var post domain.Post
 	if err := c.BindJSON(&post); err != nil {
-		log.WithFields(log.Fields{
-			"handler": "NewPost",
-		}).Error(err)
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
 		c.String(http.StatusBadRequest, "Bad Request: %s", err)
+		return
+	}
+
+	cookie, err := c.Cookie("refresh-token")
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.String(http.StatusBadRequest, "create() error: %s", err)
+		return
+	}
+	post.AuthorId, err = h.usersService.GetIdByToken(c, cookie)
+
+	if err := h.postsService.Create(c, post); err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.String(http.StatusBadRequest, "create() error: %s", err)
 		return
 	}
 	c.JSON(http.StatusCreated, map[string]interface{}{
@@ -42,7 +54,15 @@ func (h *Handler) Create(c *gin.Context) {
 // @Success 200 {array} []domain.Post
 // @Router /post/all [get]
 func (h *Handler) List(c *gin.Context) {
-	posts, err := h.postsService.GetAll(c)
+	cookie, err := c.Cookie("refresh-token")
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.String(http.StatusBadRequest, "create() error: %s", err)
+		return
+	}
+	userId, _ := h.usersService.GetIdByToken(c, cookie)
+
+	posts, err := h.postsService.List(c, userId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"handler": "GetAllPosts",
@@ -72,8 +92,15 @@ func (h *Handler) GetById(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Invalid id - ensure it is a number")
 		return
 	}
+	cookie, err := c.Cookie("refresh-token")
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.String(http.StatusBadRequest, "create() error: %s", err)
+		return
+	}
+	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
-	posts, err := h.postsService.GetById(c, id)
+	posts, err := h.postsService.GetById(c, id, userId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"handler": "GetPostById",
@@ -82,19 +109,6 @@ func (h *Handler) GetById(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, posts)
-
-	//response, err := json.Marshal(posts)
-	//if err != nil {
-	//	log.Println("getPostbyId() error:", err)
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	errorresponse := domain.PostError{"Error getting post: " + err.Error()}
-	//	response, _ := json.Marshal(errorresponse)
-	//	w.Write(response)
-	//	return
-	//}
-	//
-	//w.WriteHeader(http.StatusOK)
-	//w.Write(response)
 }
 
 // Update post by ID godoc
@@ -116,7 +130,15 @@ func (h *Handler) UpdateById(c *gin.Context) {
 		return
 	}
 
-	if err := h.postsService.Update(c, post.Id, post); err != nil {
+	cookie, err := c.Cookie("refresh-token")
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.String(http.StatusBadRequest, "create() error: %s", err)
+		return
+	}
+	userId, _ := h.usersService.GetIdByToken(c, cookie)
+
+	if err := h.postsService.Update(c, post.Id, post, userId); err != nil {
 		log.WithFields(log.Fields{
 			"handler": "UpdatePostById",
 		}).Error(err)
@@ -149,7 +171,15 @@ func (h *Handler) DeleteById(c *gin.Context) {
 		return
 	}
 
-	if err := h.postsService.Delete(c, post.Id); err != nil {
+	cookie, err := c.Cookie("refresh-token")
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.String(http.StatusBadRequest, "create() error: %s", err)
+		return
+	}
+	userId, _ := h.usersService.GetIdByToken(c, cookie)
+
+	if err := h.postsService.Delete(c, post.Id, userId); err != nil {
 		log.WithFields(log.Fields{
 			"handler": "DeletePostById",
 		}).Error(err)

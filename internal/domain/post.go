@@ -8,6 +8,7 @@ type Post struct {
 	Id        int64     `json:"id"`
 	Title     string    `json:"title"`
 	Body      string    `json:"body"`
+	AuthorId  int64     `json:"AuthorId"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
