@@ -58,13 +58,11 @@ func main() {
 	usersRepo := repository.NewUsers(db)
 	tokensRepo := repository.NewTokens(db)
 
-	postService := service.NewPosts(postsRepo, handlerCache)
-	usersService := service.NewUsers(usersRepo, tokensRepo, hasher, []byte(cfg.JWTSecret))
 	auditClient, err := grpc_client.NewClient(9000)
 	if err != nil {
 		log.Fatal(err)
 	}
-	postService := service.NewPosts(postsRepo, auditClient)
+	postService := service.NewPosts(postsRepo, handlerCache, auditClient)
 	usersService := service.NewUsers(usersRepo, tokensRepo, auditClient, hasher, []byte(cfg.JWTSecret))
 
 	handler := rest.NewHandler(postService, usersService)

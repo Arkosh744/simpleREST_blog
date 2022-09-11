@@ -12,10 +12,10 @@ import (
 
 type Posts interface {
 	Create(ctx context.Context, post domain.Post) error
-	GetById(ctx context.Context, id int64) (domain.Post, error)
-	List(ctx context.Context) ([]domain.Post, error)
-	Delete(ctx context.Context, id int64) error
-	Update(ctx context.Context, id int64, post *domain.UpdatePost) error
+	GetById(ctx context.Context, id int64, userId int64) (domain.Post, error)
+	List(ctx context.Context, userId int64) ([]domain.Post, error)
+	Delete(ctx context.Context, id int64, userId int64) error
+	Update(ctx context.Context, id int64, post *domain.UpdatePost, userId int64) error
 }
 
 type Users interface {

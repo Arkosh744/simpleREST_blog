@@ -5,8 +5,8 @@ import (
 	customCache "github.com/Arkosh744/FirstCache"
 	audit "github.com/Arkosh744/grpc-audit-log/pkg/domain"
 	"github.com/Arkosh744/simpleREST_blog/internal/domain"
-	"strconv"
 	"github.com/sirupsen/logrus"
+	"strconv"
 	"time"
 )
 
@@ -19,15 +19,15 @@ type PostsRepository interface {
 }
 
 type Posts struct {
-	repo  PostsRepository
-	cache *customCache.Cache
+	repo        PostsRepository
+	cache       *customCache.Cache
 	auditClient AuditClient
 }
 
 func NewPosts(repo PostsRepository, cache *customCache.Cache, auditClient AuditClient) *Posts {
 	return &Posts{
-		repo:  repo,
-		cache: cache,
+		repo:        repo,
+		cache:       cache,
 		auditClient: auditClient,
 	}
 }
@@ -56,7 +56,7 @@ func (p *Posts) Create(ctx context.Context, post domain.Post) error {
 	return nil
 }
 
-func (p *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
+func (p *Posts) GetById(ctx context.Context, id int64, userId int64) (domain.Post, error) {
 	if post, err := p.cache.Get(strconv.FormatInt(id, 10)); err == nil {
 		return post.Value.(domain.Post), err
 	} else {
@@ -97,7 +97,7 @@ func (p *Posts) List(ctx context.Context, userId int64) ([]domain.Post, error) {
 	return posts, err
 }
 
-func (p *Posts) Delete(ctx context.Context, id int64) error {
+func (p *Posts) Delete(ctx context.Context, id int64, userId int64) error {
 	if _, err := p.cache.Get(strconv.FormatInt(id, 10)); err == nil {
 		_ = p.cache.Delete(strconv.FormatInt(id, 10))
 	}
@@ -116,7 +116,7 @@ func (p *Posts) Delete(ctx context.Context, id int64) error {
 	return err
 }
 
-func (p *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) error {
+func (p *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost, userId int64) error {
 	p.cache.Set(strconv.FormatInt(post.Id, 10), post, time.Second*360, ctx)
 	err := p.repo.Update(ctx, id, post)
 
