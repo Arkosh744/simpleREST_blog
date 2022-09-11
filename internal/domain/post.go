@@ -1,12 +1,7 @@
 package domain
 
 import (
-	"errors"
 	"time"
-)
-
-var (
-	ErrPostNotFound = errors.New("post not found")
 )
 
 type Post struct {
