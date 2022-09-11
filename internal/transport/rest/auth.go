@@ -28,15 +28,39 @@ func (h *Handler) signIn(c *gin.Context) {
 		return
 	}
 	log.Println(inp)
-	token, err := h.usersService.SignIn(c, inp)
+	accessToken, refreshToken, err := h.usersService.SignIn(c, inp)
+	if err != nil {
+		log.Println("signIn", err)
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.SetCookie("refresh-token", refreshToken, 2592000, "/", "", false, true)
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.JSON(http.StatusCreated, map[string]string{
+		"token": accessToken,
+	})
+}
+
+func (h *Handler) refresh(c *gin.Context) {
+	cookie, err := c.Cookie("refresh-token")
+	if err != nil {
+		log.Println("refresh", err)
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Println(cookie)
+
+	accessToken, refreshToken, err := h.usersService.RefreshTokens(c, cookie)
 	if err != nil {
 		log.Println("signIn", err)
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	c.SetCookie("refresh-token", refreshToken, 2592000, "/", "", false, true)
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.JSON(http.StatusCreated, map[string]string{
-		"token": token,
+		"token": accessToken,
 	})
 }
