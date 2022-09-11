@@ -50,6 +50,7 @@ func (h *Handler) List(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "InternalServerError: %s", err)
 		return
 	}
+
 	c.JSON(http.StatusOK, posts)
 }
 
@@ -81,7 +82,6 @@ func (h *Handler) GetById(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, post)
 	return
-
 }
 
 // Update post by ID godoc
@@ -103,7 +103,7 @@ func (h *Handler) UpdateById(c *gin.Context) {
 		return
 	}
 
-	if err := h.postServices.Update(c, post.Id, post); err != nil {
+	if err := h.postsService.Update(c, post.Id, post); err != nil {
 		log.WithFields(log.Fields{
 			"handler": "UpdatePostById",
 		}).Error(err)
@@ -136,7 +136,7 @@ func (h *Handler) DeleteById(c *gin.Context) {
 		return
 	}
 
-	if err := h.postServices.Delete(c, post.Id); err != nil {
+	if err := h.postsService.Delete(c, post.Id); err != nil {
 		log.WithFields(log.Fields{
 			"handler": "DeletePostById",
 		}).Error(err)

@@ -12,6 +12,7 @@ type Config struct {
 	DBSSLMode  string `mapstructure:"DB_SSLMODE"`
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	SrvPort    string `mapstructure:"SRV_PORT"`
+	JWTSecret  string `mapstructure:"JWT_SECRET"`
 }
 
 func New(folder string) (*Config, error) {

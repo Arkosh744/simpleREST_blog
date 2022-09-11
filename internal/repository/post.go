@@ -17,16 +17,16 @@ func NewPosts(db *sql.DB) *Posts {
 	return &Posts{db}
 }
 
-func (b *Posts) Create(ctx context.Context, post domain.Post) error {
-	_, err := b.db.ExecContext(ctx, "INSERT INTO posts (title, body) values ($1, $2)",
+func (r *Posts) Create(ctx context.Context, post domain.Post) error {
+	_, err := r.db.ExecContext(ctx, "INSERT INTO posts (title, body) values ($1, $2)",
 		post.Title, post.Body)
 
 	return err
 }
 
-func (b *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
+func (r *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 	var post domain.Post
-	err := b.db.QueryRowContext(ctx, "SELECT id, title, body, createdAt, updatedAt FROM posts WHERE id=$1", id).
+	err := r.db.QueryRowContext(ctx, "SELECT id, title, body, \"createdAt\", \"updatedAt\" FROM posts WHERE id=$1", id).
 		Scan(&post.Id, &post.Title, &post.Body, &post.CreatedAt, &post.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return post, domain.ErrPostNotFound
@@ -54,17 +54,17 @@ func (b *Posts) List(ctx context.Context) ([]domain.Post, error) {
 	return books, rows.Err()
 }
 
-func (b *Posts) Delete(ctx context.Context, id int64) error {
-	_, err := b.db.ExecContext(ctx, "DELETE FROM posts WHERE id=$1", id)
+func (r *Posts) Delete(ctx context.Context, id int64) error {
+	_, err := r.db.ExecContext(ctx, "DELETE FROM posts WHERE id=$1", id)
 	return err
 }
 
-func (b *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) error {
+func (r *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) error {
 	setValues := make([]string, 0)
 	args := make([]any, 0)
 	argId := 1
 
-	_, err := b.GetById(ctx, id)
+	_, err := r.GetById(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -89,6 +89,6 @@ func (b *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 
 	query := fmt.Sprintf("UPDATE posts SET %s WHERE id=$%d", setQuery, argId)
 	args = append(args, id)
-	_, err = b.db.ExecContext(ctx, query, args...)
+	_, err = r.db.ExecContext(ctx, query, args...)
 	return err
 }
