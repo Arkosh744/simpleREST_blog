@@ -42,7 +42,7 @@ func (h *Handler) Create(c *gin.Context) {
 // @Success 200 {array} []domain.Post
 // @Router /post/all [get]
 func (h *Handler) List(c *gin.Context) {
-	posts, err := h.postServices.List(c)
+	posts, err := h.postsService.List(c)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"handler": "GetAllPosts",
@@ -72,7 +72,7 @@ func (h *Handler) GetById(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Invalid id - ensure it is a number")
 		return
 	}
-	post, err := h.postServices.GetById(c, id)
+	post, err := h.postsService.GetById(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"handler": "GetPostById",

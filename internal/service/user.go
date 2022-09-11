@@ -38,7 +38,10 @@ func (u *Users) SignUp(ctx context.Context, inp domain.SignUpInput) error {
 	if err != nil {
 		return err
 	}
-
+	_, err = u.repo.GetByCredentials(ctx, inp.Email, password)
+	if err == nil {
+		return errors.New("user already exists")
+	}
 	user := domain.User{
 		Name:         inp.Name,
 		Email:        inp.Email,

@@ -3,6 +3,7 @@ module github.com/Arkosh744/simpleREST_blog
 go 1.18
 
 require (
+	github.com/Arkosh744/FirstCache v0.0.0-20220825200146-9bb2925716d6
 	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/lib/pq v1.10.6

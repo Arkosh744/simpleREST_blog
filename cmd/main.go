@@ -54,10 +54,9 @@ func main() {
 
 	postsRepo := repository.NewPosts(db)
 	handlerCache := cache.NewCache()
-	handler := rest.NewHandler(postService)
 	usersRepo := repository.NewUsers(db)
 
-	postService := service.NewPosts(postsRepo)
+	postService := service.NewPosts(postsRepo, handlerCache)
 	usersService := service.NewUsers(usersRepo, hasher, []byte(cfg.JWTSecret))
 
 	handler := rest.NewHandler(postService, usersService)
