@@ -13,7 +13,7 @@ import (
 type Posts interface {
 	Create(ctx context.Context, post domain.Post) error
 	GetById(ctx context.Context, id int64) (domain.Post, error)
-	GetAll(ctx context.Context) ([]domain.Post, error)
+	List(ctx context.Context) ([]domain.Post, error)
 	Delete(ctx context.Context, id int64) error
 	Update(ctx context.Context, id int64, post *domain.UpdatePost) error
 }

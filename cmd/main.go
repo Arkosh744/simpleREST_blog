@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	cache "github.com/Arkosh744/FirstCache"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
@@ -49,7 +50,8 @@ func main() {
 	defer db.Close()
 
 	postsRepo := repository.NewPosts(db)
-	postService := service.NewPosts(postsRepo)
+	handlerCache := cache.NewCache()
+	postService := service.NewPosts(postsRepo, handlerCache)
 	handler := rest.NewHandler(postService)
 
 	// init & run server

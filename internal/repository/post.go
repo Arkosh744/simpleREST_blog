@@ -35,7 +35,7 @@ func (b *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 	return post, err
 }
 
-func (b *Posts) GetAll(ctx context.Context) ([]domain.Post, error) {
+func (b *Posts) List(ctx context.Context) ([]domain.Post, error) {
 	rows, err := b.db.QueryContext(ctx, "SELECT id, title, body, createdAt, updatedAt FROM posts")
 	if err != nil {
 		return nil, err
