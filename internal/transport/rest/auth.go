@@ -27,7 +27,6 @@ func (h *Handler) signIn(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Println(inp)
 	accessToken, refreshToken, err := h.usersService.SignIn(c, inp)
 	if err != nil {
 		log.Println("signIn", err)

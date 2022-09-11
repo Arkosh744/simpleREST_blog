@@ -4,6 +4,7 @@ import (
 	"github.com/Arkosh744/simpleREST_blog/internal/config"
 	"github.com/Arkosh744/simpleREST_blog/internal/repository"
 	"github.com/Arkosh744/simpleREST_blog/internal/service"
+	grpc_client "github.com/Arkosh744/simpleREST_blog/internal/transport/grpc"
 	"github.com/Arkosh744/simpleREST_blog/internal/transport/rest"
 	"github.com/Arkosh744/simpleREST_blog/pkg/database"
 	"github.com/Arkosh744/simpleREST_blog/pkg/hash"
@@ -59,6 +60,12 @@ func main() {
 
 	postService := service.NewPosts(postsRepo, handlerCache)
 	usersService := service.NewUsers(usersRepo, tokensRepo, hasher, []byte(cfg.JWTSecret))
+	auditClient, err := grpc_client.NewClient(9000)
+	if err != nil {
+		log.Fatal(err)
+	}
+	postService := service.NewPosts(postsRepo, auditClient)
+	usersService := service.NewUsers(usersRepo, tokensRepo, auditClient, hasher, []byte(cfg.JWTSecret))
 
 	handler := rest.NewHandler(postService, usersService)
 

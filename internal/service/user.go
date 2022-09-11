@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	audit "github.com/Arkosh744/grpc-audit-log/pkg/domain"
 	"github.com/Arkosh744/simpleREST_blog/internal/domain"
 	"github.com/golang-jwt/jwt"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"strconv"
 	"time"
@@ -25,19 +27,25 @@ type TokensRepository interface {
 	Get(ctx context.Context, token string) (domain.RefreshToken, error)
 }
 
-type Users struct {
-	repo       UsersRepository
-	tokenRepo  TokensRepository
-	hasher     PasswordHasher
-	hmacSecret []byte
+type AuditClient interface {
+	SendLogRequest(ctx context.Context, req audit.LogItem) error
 }
 
-func NewUsers(repo UsersRepository, tokenRepo TokensRepository, hasher PasswordHasher, secret []byte) *Users {
+type Users struct {
+	repo        UsersRepository
+	tokenRepo   TokensRepository
+	auditClient AuditClient
+	hasher      PasswordHasher
+	hmacSecret  []byte
+}
+
+func NewUsers(repo UsersRepository, tokenRepo TokensRepository, auditClient AuditClient, hasher PasswordHasher, secret []byte) *Users {
 	return &Users{
-		repo:       repo,
-		tokenRepo:  tokenRepo,
-		hasher:     hasher,
-		hmacSecret: secret,
+		repo:        repo,
+		tokenRepo:   tokenRepo,
+		auditClient: auditClient,
+		hasher:      hasher,
+		hmacSecret:  secret,
 	}
 }
 
@@ -57,7 +65,26 @@ func (u *Users) SignUp(ctx context.Context, inp domain.SignUpInput) error {
 		RegisteredAt: time.Now(),
 	}
 
-	return u.repo.Create(ctx, user)
+	if err := u.repo.Create(ctx, user); err != nil {
+		return err
+	}
+
+	user, err = u.repo.GetByCredentials(ctx, inp.Email, password)
+	if err != nil {
+		return err
+	}
+
+	if err := u.auditClient.SendLogRequest(ctx, audit.LogItem{
+		Action:    audit.ACTION_REGISTER,
+		Entity:    audit.ENTITY_USER,
+		UserID:    user.ID,
+		Timestamp: time.Now(),
+	}); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"method": "Users.SignUp",
+		}).Error("failed to send log request:", err)
+	}
+	return nil
 }
 
 func (u *Users) SignIn(ctx context.Context, inp domain.SignInInput) (string, string, error) {
@@ -70,6 +97,17 @@ func (u *Users) SignIn(ctx context.Context, inp domain.SignInInput) (string, str
 		return "", "", err
 	}
 
+	if err := u.auditClient.SendLogRequest(ctx, audit.LogItem{
+		Action:    audit.ACTION_LOGIN,
+		Entity:    audit.ENTITY_USER,
+		UserID:    user.ID,
+		Timestamp: time.Now(),
+	}); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"method": "Users.SignIn",
+		}).Error("failed to send log request:", err)
+	}
+
 	return u.generateTokens(ctx, user.ID)
 }
 
@@ -77,7 +115,7 @@ func (u *Users) generateTokens(ctx context.Context, userID int64) (string, strin
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Subject:   strconv.Itoa(int(userID)),
 		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	accessToken, err := token.SignedString(u.hmacSecret)
@@ -156,4 +194,15 @@ func (u *Users) RefreshTokens(ctx context.Context, refreshToken string) (string,
 	}
 
 	return u.generateTokens(ctx, token.UserID)
+}
+
+func (u *Users) GetIdByToken(ctx context.Context, refreshToken string) (int64, error) {
+	token, err := u.tokenRepo.Get(ctx, refreshToken)
+	if err != nil {
+		return 0, err
+	}
+	if token.ExpiresAt.Unix() < time.Now().Unix() {
+		return 0, domain.ErrRefreshTokenExpired
+	}
+	return token.UserID, nil
 }
