@@ -9,13 +9,23 @@ import (
 
 func (h *Handler) signUp(c *gin.Context) {
 	var inp domain.SignUpInput
-	if err := c.ShouldBind(&inp); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
+	if err := c.BindJSON(&inp); err != nil {
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
+	if err := inp.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input body",
+		})
 		return
 	}
 	err := h.usersService.SignUp(c, inp)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	c.JSON(http.StatusOK, "OK")
@@ -23,7 +33,11 @@ func (h *Handler) signUp(c *gin.Context) {
 
 func (h *Handler) signIn(c *gin.Context) {
 	var inp domain.SignInInput
-	if err := c.ShouldBind(&inp); err != nil {
+	if err := c.BindJSON(&inp); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := inp.Validate(); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}

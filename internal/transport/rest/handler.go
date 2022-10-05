@@ -10,6 +10,8 @@ import (
 	_ "github.com/Arkosh744/simpleREST_blog/docs"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/mocks.go -package=mocks
+
 type Posts interface {
 	Create(ctx context.Context, post domain.Post) error
 	GetById(ctx context.Context, id int64, userId int64) (domain.Post, error)

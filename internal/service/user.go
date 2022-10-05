@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -source=user.go -destination=mocks/user_mock.go -package=mocks
+
 import (
 	"context"
 	"errors"
@@ -32,29 +34,29 @@ type AuditClient interface {
 }
 
 type Users struct {
-	repo        UsersRepository
-	tokenRepo   TokensRepository
-	auditClient AuditClient
-	hasher      PasswordHasher
-	hmacSecret  []byte
+	Repo        UsersRepository
+	TokenRepo   TokensRepository
+	AuditClient AuditClient
+	Hasher      PasswordHasher
+	HmacSecret  []byte
 }
 
 func NewUsers(repo UsersRepository, tokenRepo TokensRepository, auditClient AuditClient, hasher PasswordHasher, secret []byte) *Users {
 	return &Users{
-		repo:        repo,
-		tokenRepo:   tokenRepo,
-		auditClient: auditClient,
-		hasher:      hasher,
-		hmacSecret:  secret,
+		Repo:        repo,
+		TokenRepo:   tokenRepo,
+		AuditClient: auditClient,
+		Hasher:      hasher,
+		HmacSecret:  secret,
 	}
 }
 
 func (u *Users) SignUp(ctx context.Context, inp domain.SignUpInput) error {
-	password, err := u.hasher.Hash(inp.Password)
+	password, err := u.Hasher.Hash(inp.Password)
 	if err != nil {
 		return err
 	}
-	_, err = u.repo.GetByCredentials(ctx, inp.Email, password)
+	_, err = u.Repo.GetByCredentials(ctx, inp.Email, password)
 	if err == nil {
 		return errors.New("user already exists")
 	}
@@ -65,16 +67,16 @@ func (u *Users) SignUp(ctx context.Context, inp domain.SignUpInput) error {
 		RegisteredAt: time.Now(),
 	}
 
-	if err := u.repo.Create(ctx, user); err != nil {
+	if err := u.Repo.Create(ctx, user); err != nil {
 		return err
 	}
 
-	user, err = u.repo.GetByCredentials(ctx, inp.Email, password)
+	user, err = u.Repo.GetByCredentials(ctx, inp.Email, password)
 	if err != nil {
 		return err
 	}
 
-	if err := u.auditClient.SendLogRequest(ctx, audit.LogItem{
+	if err := u.AuditClient.SendLogRequest(ctx, audit.LogItem{
 		Action:    audit.ACTION_REGISTER,
 		Entity:    audit.ENTITY_USER,
 		UserID:    user.ID,
@@ -88,16 +90,16 @@ func (u *Users) SignUp(ctx context.Context, inp domain.SignUpInput) error {
 }
 
 func (u *Users) SignIn(ctx context.Context, inp domain.SignInInput) (string, string, error) {
-	password, err := u.hasher.Hash(inp.Password)
+	password, err := u.Hasher.Hash(inp.Password)
 	if err != nil {
 		return "", "", err
 	}
-	user, err := u.repo.GetByCredentials(ctx, inp.Email, password)
+	user, err := u.Repo.GetByCredentials(ctx, inp.Email, password)
 	if err != nil {
 		return "", "", err
 	}
 
-	if err := u.auditClient.SendLogRequest(ctx, audit.LogItem{
+	if err := u.AuditClient.SendLogRequest(ctx, audit.LogItem{
 		Action:    audit.ACTION_LOGIN,
 		Entity:    audit.ENTITY_USER,
 		UserID:    user.ID,
@@ -118,7 +120,7 @@ func (u *Users) generateTokens(ctx context.Context, userID int64) (string, strin
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	accessToken, err := token.SignedString(u.hmacSecret)
+	accessToken, err := token.SignedString(u.HmacSecret)
 	if err != nil {
 		return "", "", err
 	}
@@ -127,7 +129,7 @@ func (u *Users) generateTokens(ctx context.Context, userID int64) (string, strin
 	if err != nil {
 		return "", "", err
 	}
-	if err := u.tokenRepo.Create(ctx, domain.RefreshToken{
+	if err := u.TokenRepo.Create(ctx, domain.RefreshToken{
 		UserID:    userID,
 		Token:     refreshToken,
 		ExpiresAt: time.Now().Add(time.Hour * 24 * 30),
@@ -142,7 +144,7 @@ func (u *Users) ParseToken(ctx context.Context, token string) (int64, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		return u.hmacSecret, nil
+		return u.HmacSecret, nil
 	})
 	if err != nil {
 		return 0, err
@@ -184,7 +186,7 @@ func newRefreshToken() (string, error) {
 }
 
 func (u *Users) RefreshTokens(ctx context.Context, refreshToken string) (string, string, error) {
-	token, err := u.tokenRepo.Get(ctx, refreshToken)
+	token, err := u.TokenRepo.Get(ctx, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
@@ -197,7 +199,7 @@ func (u *Users) RefreshTokens(ctx context.Context, refreshToken string) (string,
 }
 
 func (u *Users) GetIdByToken(ctx context.Context, refreshToken string) (int64, error) {
-	token, err := u.tokenRepo.Get(ctx, refreshToken)
+	token, err := u.TokenRepo.Get(ctx, refreshToken)
 	if err != nil {
 		return 0, err
 	}

@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -source=post.go -destination=mocks/post_mock.go -package=mocks
+
 import (
 	"context"
 	customCache "github.com/Arkosh744/FirstCache"
