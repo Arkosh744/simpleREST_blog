@@ -48,10 +48,17 @@ func (h *Handler) signIn(c *gin.Context) {
 	accessToken, refreshToken, err := h.usersService.SignIn(c, inp)
 	if err != nil {
 		log.Println("signIn", err)
-		c.JSON(http.StatusInternalServerError, map[string]string{
-			"message": err.Error(),
-		})
-		return
+		if err == domain.ErrorInvalidCredentials {
+			c.JSON(http.StatusUnauthorized, map[string]string{
+				"message": err.Error(),
+			})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, map[string]string{
+				"message": err.Error(),
+			})
+			return
+		}
 	}
 	c.SetCookie("refresh-token", refreshToken, 2592000, "/", "", false, true)
 	c.Writer.Header().Set("Content-Type", "application/json")

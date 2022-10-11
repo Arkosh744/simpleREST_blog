@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/magiconair/properties/assert"
 	"golang.org/x/net/context"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 )
@@ -96,12 +97,6 @@ func TestHandler_signUp(t *testing.T) {
 func TestHandler_signIn(t *testing.T) {
 	// Init Test Table
 	type mockBehavior func(r *mocks.MockUsers, ctx context.Context, user domain.SignInInput)
-	//var getContext = func(id int) *gin.Context {
-	//	ctx := &gin.Context{}
-	//	ctx.Set("id", id)
-	//	return ctx
-	//}
-
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -131,10 +126,10 @@ func TestHandler_signIn(t *testing.T) {
 				Password: "qwertyloggg",
 			},
 			mockBehavior: func(r *mocks.MockUsers, ctx context.Context, inp domain.SignInInput) {
-				r.EXPECT().SignIn(gomock.Any(), inp).Return("", "", errors.New("invalid credentials"))
+				r.EXPECT().SignIn(gomock.Any(), inp).Return("", "", domain.ErrorInvalidCredentials)
 			},
-			expectedStatusCode:   400,
-			expectedResponseBody: `{"message":"invalid input body"}`,
+			expectedStatusCode:   401,
+			expectedResponseBody: `{"message":"invalid credentials"}`,
 		},
 		{
 			name:      "Service Error",
@@ -170,6 +165,68 @@ func TestHandler_signIn(t *testing.T) {
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/auth/sign-in",
 				bytes.NewBufferString(test.inputBody))
+			// Make Request
+			r.ServeHTTP(w, req)
+			// Assert
+			assert.Equal(t, w.Code, test.expectedStatusCode)
+			assert.Equal(t, w.Body.String(), test.expectedResponseBody)
+		})
+	}
+}
+
+func TestHandler_refresh(t *testing.T) {
+	// Init Test Table
+	type mockBehavior func(r *mocks.MockUsers, ctx context.Context)
+	tests := []struct {
+		name                 string
+		cookie               string
+		mockBehavior         mockBehavior
+		expectedStatusCode   int
+		expectedResponseBody string
+	}{
+		{
+			name:   "Ok",
+			cookie: "cookie",
+			mockBehavior: func(r *mocks.MockUsers, ctx context.Context) {
+				r.EXPECT().RefreshTokens(gomock.Any(), "cookie").Return("mocked_token", "mocked_refresh_token", nil)
+			},
+			expectedStatusCode:   200,
+			expectedResponseBody: `{"token":"mocked_token"}`,
+		},
+		{
+			name:   "Service Error",
+			cookie: "cookie",
+			mockBehavior: func(r *mocks.MockUsers, ctx context.Context) {
+				r.EXPECT().RefreshTokens(gomock.Any(), "cookie").Return("", "", errors.New("something went wrong"))
+			},
+			expectedStatusCode:   500,
+			expectedResponseBody: `{"message":"something went wrong"}`,
+		},
+	}
+	gin.SetMode(gin.TestMode)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fmt.Printf("---------------- Start %s ----------------\n", test.name)
+			// Init Dependencies
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			auth := mocks.NewMockUsers(c)
+			test.mockBehavior(auth, context.Background())
+			handler := NewHandler(&service.Posts{}, auth)
+			// Init Endpoint
+			r := gin.Default()
+			r.POST("/auth/refresh", handler.refresh)
+
+			// Create Request
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/auth/refresh", nil)
+			mockCookie := &http.Cookie{
+				Name:   "refresh-token",
+				Value:  test.cookie,
+				MaxAge: 2592000,
+			}
+			req.AddCookie(mockCookie)
 			// Make Request
 			r.ServeHTTP(w, req)
 			// Assert
