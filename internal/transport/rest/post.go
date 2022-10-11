@@ -20,23 +20,29 @@ import (
 // @Router /post/new [post]
 func (h *Handler) Create(c *gin.Context) {
 	var post domain.Post
-	if err := c.BindJSON(&post); err != nil {
+	err := c.BindJSON(&post)
+	if post.Body == "" || post.Title == "" || err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "Bad Request: %s", err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input post body",
+		})
 		return
 	}
-
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	post.AuthorId, err = h.usersService.GetIdByToken(c, cookie)
 
 	if err := h.postsService.Create(c, post); err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	c.JSON(http.StatusCreated, map[string]interface{}{
