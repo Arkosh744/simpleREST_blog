@@ -18,7 +18,7 @@ import (
 
 func TestHandler_signUp(t *testing.T) {
 	// Init Test Table
-	type mockBehavior func(r *mocks.MockUsers, ctx context.Context, user domain.SignUpInput)
+	type mockBehavior func(r *mocks.MockUsers, ctx context.Context, inp domain.SignUpInput)
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -96,7 +96,7 @@ func TestHandler_signUp(t *testing.T) {
 
 func TestHandler_signIn(t *testing.T) {
 	// Init Test Table
-	type mockBehavior func(r *mocks.MockUsers, ctx context.Context, user domain.SignInInput)
+	type mockBehavior func(r *mocks.MockUsers, ctx context.Context, inp domain.SignInInput)
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -119,6 +119,15 @@ func TestHandler_signIn(t *testing.T) {
 			expectedResponseBody: `{"token":"mocked_token"}`,
 		},
 		{
+			name:      "Wrong Input",
+			inputBody: `{"name": "username"}`,
+			inputUser: domain.SignInInput{},
+			mockBehavior: func(r *mocks.MockUsers, ctx context.Context, inp domain.SignInInput) {
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"invalid input body"}`,
+		},
+		{
 			name:      "Invalid Credentials",
 			inputBody: `{"email": "username@gmail.com", "password": "qwertyloggg"}`,
 			inputUser: domain.SignInInput{
@@ -126,7 +135,7 @@ func TestHandler_signIn(t *testing.T) {
 				Password: "qwertyloggg",
 			},
 			mockBehavior: func(r *mocks.MockUsers, ctx context.Context, inp domain.SignInInput) {
-				r.EXPECT().SignIn(gomock.Any(), inp).Return("", "", domain.ErrorInvalidCredentials)
+				r.EXPECT().SignIn(gomock.Any(), inp).Return("", "", domain.ErrInvalidCredentials)
 			},
 			expectedStatusCode:   401,
 			expectedResponseBody: `{"message":"invalid credentials"}`,

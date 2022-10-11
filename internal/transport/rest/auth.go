@@ -17,7 +17,7 @@ func (h *Handler) signUp(c *gin.Context) {
 	}
 	if err := inp.Validate(); err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{
-			"message": "invalid input body",
+			"message": domain.ErrInvalidInput.Error(),
 		})
 		return
 	}
@@ -41,14 +41,14 @@ func (h *Handler) signIn(c *gin.Context) {
 	}
 	if err := inp.Validate(); err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{
-			"message": err.Error(),
+			"message": domain.ErrInvalidInput.Error(),
 		})
 		return
 	}
 	accessToken, refreshToken, err := h.usersService.SignIn(c, inp)
 	if err != nil {
 		log.Println("signIn", err)
-		if err == domain.ErrorInvalidCredentials {
+		if err == domain.ErrInvalidCredentials {
 			c.JSON(http.StatusUnauthorized, map[string]string{
 				"message": err.Error(),
 			})
