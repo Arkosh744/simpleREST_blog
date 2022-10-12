@@ -20,23 +20,29 @@ import (
 // @Router /post/new [post]
 func (h *Handler) Create(c *gin.Context) {
 	var post domain.Post
-	if err := c.BindJSON(&post); err != nil {
+	err := c.BindJSON(&post)
+	if post.Body == "" || post.Title == "" || err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "Bad Request: %s", err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input post body",
+		})
 		return
 	}
-
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	post.AuthorId, err = h.usersService.GetIdByToken(c, cookie)
 
 	if err := h.postsService.Create(c, post); err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	c.JSON(http.StatusCreated, map[string]interface{}{
@@ -56,18 +62,20 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
-		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		log.WithFields(log.Fields{"handler": "List"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
 	posts, err := h.postsService.List(c, userId)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"handler": "GetAllPosts",
-		}).Error(err)
-		c.String(http.StatusInternalServerError, "InternalServerError: %s", err)
+		log.WithFields(log.Fields{"handler": "List"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -89,23 +97,28 @@ func (h *Handler) GetById(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"handler": "GetPostById",
 		}).Error(err)
-		c.String(http.StatusBadRequest, "Invalid id - ensure it is a number")
+		log.WithFields(log.Fields{"handler": "GetPostById"}).Error(err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input post id",
+		})
 		return
 	}
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
-		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		log.WithFields(log.Fields{"handler": "GetPostById"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
 	posts, err := h.postsService.GetById(c, id, userId)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"handler": "GetPostById",
-		}).Error(err)
-		c.String(http.StatusBadRequest, "getPostbyId() error: %s", err)
+		log.WithFields(log.Fields{"handler": "GetPostById"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	c.JSON(http.StatusOK, posts)
@@ -122,33 +135,34 @@ func (h *Handler) GetById(c *gin.Context) {
 // @Router /post/update [post]
 func (h *Handler) UpdateById(c *gin.Context) {
 	var post *domain.UpdatePost
-	if err := c.BindJSON(&post); err != nil {
-		log.WithFields(log.Fields{
-			"handler": "UpdatePostById",
-		}).Error(err)
-		c.String(http.StatusBadRequest, "Bad Request: %s", err)
+	err := c.BindJSON(&post)
+	if post.Body == "" || post.Title == "" || err != nil {
+		log.WithFields(log.Fields{"handler": "UpdatePostById"}).Error(err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input post body",
+		})
 		return
 	}
 
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
-		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		log.WithFields(log.Fields{"handler": "UpdatePostById"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
 	if err := h.postsService.Update(c, post.Id, post, userId); err != nil {
-		log.WithFields(log.Fields{
-			"handler": "UpdatePostById",
-		}).Error(err)
-		c.String(http.StatusBadRequest, "update() error: %s", err)
+		log.WithFields(log.Fields{"handler": "UpdatePostById"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"id":    post.Id,
-		"title": post.Title,
-		"body":  post.Body,
+		"message": "updated",
 	})
 }
 
@@ -163,28 +177,33 @@ func (h *Handler) UpdateById(c *gin.Context) {
 // @Router /post/delete [post]
 func (h *Handler) DeleteById(c *gin.Context) {
 	var post *domain.UpdatePost
-	if err := c.BindJSON(&post); err != nil {
-		log.WithFields(log.Fields{
-			"handler": "DeletePostById",
-		}).Error(err)
-		c.String(http.StatusBadRequest, "Bad Request: %s", err)
+	err := c.BindJSON(&post)
+	if post.Id == 0 || err != nil {
+		log.WithFields(log.Fields{"handler": "DeletePostById"}).Error(err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input post body",
+		})
 		return
 	}
 
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
-		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		log.WithFields(log.Fields{"handler": "DeletePostById"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
 	if err := h.postsService.Delete(c, post.Id, userId); err != nil {
-		log.WithFields(log.Fields{
-			"handler": "DeletePostById",
-		}).Error(err)
-		c.String(http.StatusBadRequest, "Delete() error: %s", err)
+		log.WithFields(log.Fields{"handler": "DeletePostById"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
-	c.JSON(http.StatusOK, "Deleted")
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "deleted",
+	})
 }
