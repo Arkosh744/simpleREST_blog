@@ -62,18 +62,20 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
-		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		log.WithFields(log.Fields{"handler": "List"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
 	posts, err := h.postsService.List(c, userId)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"handler": "GetAllPosts",
-		}).Error(err)
-		c.String(http.StatusInternalServerError, "InternalServerError: %s", err)
+		log.WithFields(log.Fields{"handler": "List"}).Error(err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -95,23 +97,28 @@ func (h *Handler) GetById(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"handler": "GetPostById",
 		}).Error(err)
-		c.String(http.StatusBadRequest, "Invalid id - ensure it is a number")
+		log.WithFields(log.Fields{"handler": "GetPostById"}).Error(err)
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "invalid input post id",
+		})
 		return
 	}
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
-		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
-		c.String(http.StatusBadRequest, "create() error: %s", err)
+		log.WithFields(log.Fields{"handler": "GetPostById"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	userId, _ := h.usersService.GetIdByToken(c, cookie)
 
 	posts, err := h.postsService.GetById(c, id, userId)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"handler": "GetPostById",
-		}).Error(err)
-		c.String(http.StatusBadRequest, "getPostbyId() error: %s", err)
+		log.WithFields(log.Fields{"handler": "GetPostById"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
 		return
 	}
 	c.JSON(http.StatusOK, posts)
