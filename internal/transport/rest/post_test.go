@@ -127,79 +127,60 @@ func TestHandler_Create(t *testing.T) {
 }
 
 func TestHandler_List(t *testing.T) {
-	type mockBehavior func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.Post)
+	type mockBehavior func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers,
+		ctx context.Context, responsePosts []domain.Post)
 	var AuthorId int64 = 1
-
 	tests := []struct {
 		name                 string
-		inputBody            string
-		inputPost            domain.Post
-		mockCoockie          *http.Cookie
+		mockCookie           *http.Cookie
+		responsePost         []domain.Post
 		mockBehavior         mockBehavior
 		expectedStatusCode   int
 		expectedResponseBody string
 	}{
 		{
-			name:      "Ok",
-			inputBody: `{"title": "TestTitle", "body": "TestBody"}`,
-			inputPost: domain.Post{
-				Title:    "TestTitle",
-				Body:     "TestBody",
-				AuthorId: AuthorId,
-			},
-			mockCoockie: &http.Cookie{
+			name: "Ok",
+			mockCookie: &http.Cookie{
 				Name:   "refresh-token",
 				Value:  "refreshToken",
 				MaxAge: 2592000,
 			},
-			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.Post) {
+			responsePost: []domain.Post{{
+				Id:       1,
+				Title:    "TestTitle",
+				Body:     "TestBody",
+				AuthorId: 1,
+			}, {
+				Id:       2,
+				Title:    "TestTitle2",
+				Body:     "TestBody2",
+				AuthorId: 1,
+			}},
+			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, responsePosts []domain.Post) {
 				mockUser.EXPECT().GetIdByToken(gomock.Any(), "refreshToken").Return(AuthorId, nil)
-				mockPost.EXPECT().Create(gomock.Any(), inp).Return(nil)
+				mockPost.EXPECT().List(gomock.Any(), AuthorId).Return(responsePosts, nil)
 			},
-			expectedStatusCode:   201,
-			expectedResponseBody: `{"body":"TestBody","title":"TestTitle"}`,
+			expectedStatusCode:   200,
+			expectedResponseBody: `[{"id":1,"title":"TestTitle","body":"TestBody","AuthorId":1,"createdAt":"0001-01-01T00:00:00Z","updatedAt":"0001-01-01T00:00:00Z"},{"id":2,"title":"TestTitle2","body":"TestBody2","AuthorId":1,"createdAt":"0001-01-01T00:00:00Z","updatedAt":"0001-01-01T00:00:00Z"}]`,
 		},
 		{
-			name:        "W/o Cookie",
-			inputBody:   `{"title": "TestTitle", "body": "TestBody"}`,
-			mockCoockie: &http.Cookie{},
-			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.Post) {
+			name:       "W/o Cookie",
+			mockCookie: &http.Cookie{},
+			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, responsePosts []domain.Post) {
 			},
 			expectedStatusCode:   401,
 			expectedResponseBody: `{"message":"http: named cookie not present"}`,
 		},
 		{
-			name:      "Wrong input",
-			inputBody: `{"name": "username"}`,
-			inputPost: domain.Post{
-				AuthorId: AuthorId,
-			},
-			mockCoockie: &http.Cookie{
+			name: "Service Error",
+			mockCookie: &http.Cookie{
 				Name:   "refresh-token",
 				Value:  "refreshToken",
 				MaxAge: 2592000,
 			},
-			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.Post) {
-			},
-			expectedStatusCode:   400,
-			expectedResponseBody: `{"message":"invalid input post body"}`,
-		},
-		{
-			name:      "Ok",
-			inputBody: `{"title": "TestTitle", "body": "TestBody"}`,
-			inputPost: domain.Post{
-				Title:    "TestTitle",
-				Body:     "TestBody",
-				AuthorId: AuthorId,
-			},
-			mockCoockie: &http.Cookie{
-				Name:   "refresh-token",
-				Value:  "refreshToken",
-				MaxAge: 2592000,
-			},
-			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.Post) {
+			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, responsePosts []domain.Post) {
 				mockUser.EXPECT().GetIdByToken(gomock.Any(), "refreshToken").Return(AuthorId, nil)
-				mockPost.EXPECT().Create(gomock.Any(), inp).Return(errors.New("something went wrong"))
+				mockPost.EXPECT().List(gomock.Any(), AuthorId).Return([]domain.Post{}, errors.New("something went wrong"))
 			},
 			expectedStatusCode:   500,
 			expectedResponseBody: `{"message":"something went wrong"}`,
@@ -215,18 +196,16 @@ func TestHandler_List(t *testing.T) {
 
 			post := mocks.NewMockPosts(c)
 			auth := mocks.NewMockUsers(c)
-			test.mockBehavior(post, auth, context.Background(), test.inputPost)
-			fmt.Printf("test.inputPost: %v\n", test.inputPost)
+			test.mockBehavior(post, auth, context.Background(), test.responsePost)
 			handler := NewHandler(post, auth)
 			// Init Endpoint
 			r := gin.Default()
-			r.POST("/post/", handler.Create)
+			r.GET("/post", handler.List)
 
 			// Create Request
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest("POST", "/post/",
-				bytes.NewBufferString(test.inputBody))
-			mockCookie := test.mockCoockie
+			req := httptest.NewRequest("GET", "/post", nil)
+			mockCookie := test.mockCookie
 			req.AddCookie(mockCookie)
 			// Make Request
 			r.ServeHTTP(w, req)

@@ -73,7 +73,7 @@ func (h *Handler) List(c *gin.Context) {
 	posts, err := h.postsService.List(c, userId)
 	if err != nil {
 		log.WithFields(log.Fields{"handler": "List"}).Error(err)
-		c.JSON(http.StatusBadRequest, map[string]string{
+		c.JSON(http.StatusInternalServerError, map[string]string{
 			"message": err.Error(),
 		})
 		return
