@@ -134,9 +134,9 @@ func (h *Handler) GetById(c *gin.Context) {
 // @Success 200 {object} domain.Post
 // @Router /post/update [post]
 func (h *Handler) UpdateById(c *gin.Context) {
-	var post *domain.UpdatePost
+	var post domain.UpdatePost
 	err := c.BindJSON(&post)
-	if post.Body == "" || post.Title == "" || err != nil {
+	if (post.Body == "" && post.Title == "") || err != nil {
 		log.WithFields(log.Fields{"handler": "UpdatePostById"}).Error(err)
 		c.JSON(http.StatusBadRequest, map[string]string{
 			"message": "invalid input post body",

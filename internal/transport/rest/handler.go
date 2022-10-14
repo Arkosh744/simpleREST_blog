@@ -17,7 +17,7 @@ type Posts interface {
 	GetById(ctx context.Context, id int64, userId int64) (domain.Post, error)
 	List(ctx context.Context, userId int64) ([]domain.Post, error)
 	Delete(ctx context.Context, id int64, userId int64) error
-	Update(ctx context.Context, id int64, post *domain.UpdatePost, userId int64) error
+	Update(ctx context.Context, id int64, post domain.UpdatePost, userId int64) error
 }
 
 type Users interface {

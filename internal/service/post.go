@@ -17,7 +17,7 @@ type PostsRepository interface {
 	GetById(ctx context.Context, id int64) (domain.Post, error)
 	List(ctx context.Context) ([]domain.Post, error)
 	Delete(ctx context.Context, id int64) error
-	Update(ctx context.Context, id int64, post *domain.UpdatePost) error
+	Update(ctx context.Context, id int64, post domain.UpdatePost) (domain.Post, error)
 }
 
 type Posts struct {
@@ -118,9 +118,9 @@ func (p *Posts) Delete(ctx context.Context, id int64, userId int64) error {
 	return err
 }
 
-func (p *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost, userId int64) error {
-	p.cache.Set(strconv.FormatInt(post.Id, 10), post, time.Second*360, ctx)
-	err := p.repo.Update(ctx, id, post)
+func (p *Posts) Update(ctx context.Context, id int64, post domain.UpdatePost, userId int64) error {
+	newPost, err := p.repo.Update(ctx, id, post)
+	p.cache.Set(strconv.FormatInt(post.Id, 10), newPost, time.Second*360, ctx)
 
 	if err := p.auditClient.SendLogRequest(ctx, audit.LogItem{
 		Action:    audit.ACTION_UPDATE,

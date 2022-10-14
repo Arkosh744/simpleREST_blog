@@ -58,25 +58,27 @@ func (r *Posts) Delete(ctx context.Context, id int64) error {
 	return err
 }
 
-func (r *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) error {
+func (r *Posts) Update(ctx context.Context, id int64, post domain.UpdatePost) (domain.Post, error) {
 	setValues := make([]string, 0)
 	args := make([]any, 0)
 	argId := 1
 
-	_, err := r.GetById(ctx, id)
+	newPost, err := r.GetById(ctx, id)
 	if err != nil {
-		return err
+		return domain.Post{}, err
 	}
 
-	if post.Title != nil {
+	if post.Title != "" {
 		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
-		args = append(args, *post.Title)
+		args = append(args, post.Title)
+		newPost.Title = post.Title
 		argId++
 	}
 
-	if post.Body != nil {
+	if post.Body != "" {
 		setValues = append(setValues, fmt.Sprintf("body=$%d", argId))
-		args = append(args, *post.Body)
+		args = append(args, post.Body)
+		newPost.Body = post.Body
 		argId++
 	}
 
@@ -86,8 +88,8 @@ func (r *Posts) Update(ctx context.Context, id int64, post *domain.UpdatePost) e
 
 	setQuery := strings.Join(setValues, ", ")
 
-	query := fmt.Sprintf("UPDATE posts SET %s WHERE id=$%d", setQuery, argId)
+	query := fmt.Sprintf("%s %s %s%d", "UPDATE posts SET", setQuery, "WHERE id=$", argId)
 	args = append(args, id)
 	_, err = r.db.ExecContext(ctx, query, args...)
-	return err
+	return newPost, err
 }

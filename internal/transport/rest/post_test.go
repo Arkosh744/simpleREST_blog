@@ -351,7 +351,7 @@ func TestHandler_UpdateById(t *testing.T) {
 			},
 			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.UpdatePost) {
 				mockUser.EXPECT().GetIdByToken(gomock.Any(), "refreshToken").Return(AuthorId, nil)
-				mockPost.EXPECT().Update(gomock.Any(), inp.Id, &inp, AuthorId).Return(nil)
+				mockPost.EXPECT().Update(gomock.Any(), inp.Id, inp, AuthorId).Return(nil)
 			},
 			expectedStatusCode:   200,
 			expectedResponseBody: `{"message":"updated"}`,
@@ -394,7 +394,7 @@ func TestHandler_UpdateById(t *testing.T) {
 			},
 			mockBehavior: func(mockPost *mocks.MockPosts, mockUser *mocks.MockUsers, ctx context.Context, inp domain.UpdatePost) {
 				mockUser.EXPECT().GetIdByToken(gomock.Any(), "refreshToken").Return(AuthorId, nil)
-				mockPost.EXPECT().Update(gomock.Any(), inp.Id, &inp, AuthorId).Return(errors.New("something went wrong"))
+				mockPost.EXPECT().Update(gomock.Any(), inp.Id, inp, AuthorId).Return(errors.New("something went wrong"))
 			},
 			expectedStatusCode:   500,
 			expectedResponseBody: `{"message":"something went wrong"}`,

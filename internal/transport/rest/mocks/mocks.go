@@ -94,7 +94,7 @@ func (mr *MockPostsMockRecorder) List(ctx, userId interface{}) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockPosts) Update(ctx context.Context, id int64, post *domain.UpdatePost, userId int64) error {
+func (m *MockPosts) Update(ctx context.Context, id int64, post domain.UpdatePost, userId int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, post, userId)
 	ret0, _ := ret[0].(error)

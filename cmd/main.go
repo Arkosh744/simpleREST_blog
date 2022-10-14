@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/Arkosh744/simpleREST_blog/internal/config"
 	"github.com/Arkosh744/simpleREST_blog/internal/repository"
 	"github.com/Arkosh744/simpleREST_blog/internal/service"
@@ -8,20 +9,17 @@ import (
 	"github.com/Arkosh744/simpleREST_blog/internal/transport/rest"
 	"github.com/Arkosh744/simpleREST_blog/pkg/database"
 	"github.com/Arkosh744/simpleREST_blog/pkg/hash"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	cache "github.com/Arkosh744/FirstCache"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
-
-func init() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
-}
 
 // @title Note-taking API
 // @version 1.0
@@ -33,6 +31,19 @@ func init() {
 // @termsOfService http://swagger.io/terms/
 // @host localhost:8080
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		quit := make(chan os.Signal, 1) // we need to reserve to buffer size 1, so the notifier are not blocked
+		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+		<-quit
+		cancel()
+	}()
+
 	cfg, err := config.New("configs")
 	if err != nil {
 		log.Fatal(err)
@@ -75,9 +86,22 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	g, gCtx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return srv.ListenAndServe()
+	})
+
+	g.Go(func() error {
+		<-gCtx.Done()
+		return srv.Shutdown(context.Background())
+	})
+
 	log.Info("SERVER STARTED")
 
-	if err := srv.ListenAndServe(); err != nil {
-		log.Fatalf(err.Error())
+	if err := g.Wait(); err != nil {
+		log.WithFields(log.Fields{
+			"context": "app.Run()",
+			"problem": "server shutdowned",
+		}).Error(err.Error())
 	}
 }
