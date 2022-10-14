@@ -9,11 +9,9 @@ import (
 	"github.com/Arkosh744/simpleREST_blog/internal/transport/rest"
 	"github.com/Arkosh744/simpleREST_blog/pkg/database"
 	"github.com/Arkosh744/simpleREST_blog/pkg/hash"
-	"golang.org/x/sync/errgroup"
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
 	cache "github.com/Arkosh744/FirstCache"
@@ -34,15 +32,6 @@ func main() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func() {
-		quit := make(chan os.Signal, 1) // we need to reserve to buffer size 1, so the notifier are not blocked
-		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-
-		<-quit
-		cancel()
-	}()
 
 	cfg, err := config.New("configs")
 	if err != nil {
@@ -85,23 +74,32 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-
-	g, gCtx := errgroup.WithContext(ctx)
-	g.Go(func() error {
-		return srv.ListenAndServe()
-	})
-
-	g.Go(func() error {
-		<-gCtx.Done()
-		return srv.Shutdown(context.Background())
-	})
-
+	go func() {
+		// service connections
+		log.Info("Starting Server...")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		} else {
+		}
+	}()
 	log.Info("SERVER STARTED")
 
-	if err := g.Wait(); err != nil {
-		log.WithFields(log.Fields{
-			"context": "app.Run()",
-			"problem": "server shutdowned",
-		}).Error(err.Error())
+	// GRACEFUL SHUTDOWN with 5 seconds BELOW
+
+	quit := make(chan os.Signal, 1) // we need to reserve to buffer size 1, so the notifier are not blocked
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	log.Println("Shutdown Server ...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
 	}
+	// catching ctx.Done(). timeout of 5 seconds.
+	select {
+	case <-ctx.Done():
+		log.Println("timeout of 5 seconds.")
+	}
+	log.Println("Server exiting")
 }
