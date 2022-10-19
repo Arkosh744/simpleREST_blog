@@ -3,6 +3,8 @@ test:
 test100:
 	go test -v -count=100 ./...
 migrateup:
-	migrate -path schemes/postgres -database "postgresql://postgres:docker@localhost:5432/try?sslmode=disable" -verbose up
+	migrate -path schemes/postgres/up -database "postgresql://postgres:docker@localhost:5432/postgres?sslmode=disable" -verbose up
 migratedown:
-	migrate -path schemes/postgres -database "postgresql://postgres:docker@localhost:5432/try?sslmode=disable" -verbose down
+	migrate -path schemes/postgres/down -database "postgresql://postgres:docker@localhost:5432/postgres?sslmode=disable" -verbose down
+dockercompose:
+	docker compose --env-file .\configs\app.env up --build post-app
