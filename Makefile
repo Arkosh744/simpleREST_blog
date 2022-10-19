@@ -6,5 +6,5 @@ migrateup:
 	migrate -path schemes/postgres/up -database "postgresql://postgres:docker@localhost:5432/postgres?sslmode=disable" -verbose up
 migratedown:
 	migrate -path schemes/postgres/down -database "postgresql://postgres:docker@localhost:5432/postgres?sslmode=disable" -verbose down
-dockercompose:
+run:
 	docker compose --env-file .\configs\app.env up --build post-app

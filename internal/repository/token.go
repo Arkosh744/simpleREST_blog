@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/Arkosh744/simpleREST_blog/internal/domain"
+	log "github.com/sirupsen/logrus"
 )
 
 type Tokens struct {
@@ -23,10 +24,12 @@ func (r *Tokens) Create(ctx context.Context, token domain.RefreshToken) error {
 
 func (r *Tokens) Get(ctx context.Context, token string) (domain.RefreshToken, error) {
 	var t domain.RefreshToken
+	log.Println(token)
 	err := r.db.QueryRowContext(ctx, "SELECT id, user_id, token, expires_at FROM refresh_tokens WHERE token=$1", token).
 		Scan(&t.ID, &t.UserID, &t.Token, &t.ExpiresAt)
 
 	_, err = r.db.ExecContext(ctx, "DELETE FROM refresh_tokens WHERE id=$1", t.UserID)
 
+	log.Println(t)
 	return t, err
 }

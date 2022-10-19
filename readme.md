@@ -1,18 +1,139 @@
-# # Simple Note-taking App 
+# # Simple Note-taking App
 
-## Example
+### To run app
+
+Setup your local app.env @ ./configs/app.env file and then run:
+
+```bash
+make run
+```
+
+or
+
+```bash
+docker compose --env-file .\configs\app.env up --build post-app
+```
+
 _________________________________________________
 
-#### Json example for create new post (via POST) :
+# REST API:
+
+### Examples of usage
+
+#### First we need to sign-up:
+
+`POST /auth/sign-up`
+
 ```json
 {
-    "title": "web-develompent",
-    "body": "THis is my first REST API in GO lang"
+  "name": "NewGopher",
+  "email": "go@golang.com",
+  "password": "gog8g!pher"
 }
+```
+
+response:
+"OK"
+_________________________________________________
+
+#### Then we need to sign-in:
+
+`POST /auth/sign-in`
+
+```json
+{
+  "email": "go2g2o2@golang.com",
+  "password": "aaaaaa"
+}
+```
+
+response:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjYyNzc4MjcsImlhdCI6MTY2NjE5MTQyNywic3ViIjoiMSJ9.WZeSW-tLPQZBXfhsTza_JLXKR9O2CGAgRh32uNzG1Tg"
+}
+```
+
+_________________________________________________
+
+#### Then we can create a post:
+
+First, we need add authorization token in headers:
+`Authorization: Bearer <token>`
+
+Then we can create a post:
+`POST /post`
+
+```json
+{
+  "title": "web-develompent",
+  "body": "THis is my first REST API in GO lang"
+}
+```
+
+To get all posts:
+`GET /post`
+
+```json
+[
+  {
+    "id": 1,
+    "title": "web-develompent",
+    "body": "THis is my first REST API in GO lang",
+    "AuthorId": 1,
+    "created_at": "2022-10-12T15:21:56.075473Z",
+    "updated_at": "2022-10-12T15:21:56.075473Z"
+  },
+  {
+    "id": 3,
+    "title": "web-develompent 3",
+    "body": "Slice in Go lang",
+    "AuthorId": 1,
+    "createdAt": "2022-10-12T15:25:31.069819Z",
+    "updatedAt": "2022-10-12T15:25:31.069819Z"
+  }
+]
 ```
 _________________________________________________
 
-### Swagger docs 
+To get post by id:
+`GET /post/<id>`
+
+```json
+  {
+    "id": 1,
+    "title": "web-develompent",
+    "body": "THis is my first REST API in GO lang",
+    "AuthorId": 1,
+    "created_at": "2022-10-12T15:21:56.075473Z",
+    "updated_at": "2022-10-12T15:21:56.075473Z"
+  }
+```
+_________________________________________________
+
+To update post by id:
+`PUT /post`
+
+```json
+[
+  {
+    "id": 1,
+    "title": "web-develompent UPDATED",
+    "body": "THIS IS PYTHON",
+  }
+]
+```
+response:
+```json
+  {
+    "message": "updated"
+  }
+```
+
+_________________________________________________
+
+### Swagger docs
 
 to update need to run command: swag init -g cmd/main.go
 ![swagger.png](swagger.png)
