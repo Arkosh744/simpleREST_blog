@@ -74,12 +74,12 @@ func Run() error {
 	}
 	go func() {
 		// service connections
-		log.Info("Starting Server...")
+		log.Info("Starting Server at port " + cfg.SrvPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("listen: %s\n", err)
+			log.Info("SERVER STARTED")
 		}
 	}()
-	log.Info("SERVER STARTED")
 
 	// GRACEFUL SHUTDOWN with 5 seconds timeout BELOW
 	quit := make(chan os.Signal, 1) // we need to reserve to buffer size 1, so the notifier are not blocked
