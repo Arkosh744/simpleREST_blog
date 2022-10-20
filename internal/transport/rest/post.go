@@ -9,15 +9,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// New Post godoc
+// Create Post godoc
 // @Summary Create new post
 // @Description Create new post with title and content
 // @Tags posts
 // @Accept  json
 // @Produce  json
 // @Param new post body domain.PostQuery true "new post"
-// @Success 200 {object} domain.Post
-// @Router /post/new [post]
+// @Security ApiKeyAuth
+// @param Authorization header string true "Authorization"
+// @Success 201 {object} domain.Post
+// @Router /post/ [post]
 func (h *Handler) Create(c *gin.Context) {
 	var post domain.Post
 	err := c.BindJSON(&post)
@@ -51,14 +53,16 @@ func (h *Handler) Create(c *gin.Context) {
 	})
 }
 
-// Get posts by ID godoc
-// @Summary Get details of a post
-// @Description Get details of a post by ID
+// List posts godoc
+// @Summary Get List of posts
+// @Description Get List of posts
 // @Tags posts
 // @Accept  json
 // @Produce  json
+// @Security ApiKeyAuth
+// @param Authorization header string true "Authorization"
 // @Success 200 {array} []domain.Post
-// @Router /post/all [get]
+// @Router /post/ [get]
 func (h *Handler) List(c *gin.Context) {
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
@@ -82,13 +86,15 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, posts)
 }
 
-// Get post by ID godoc
+// GetById post godoc
 // @Summary Get details of a post
 // @Description Get details of a post by ID
 // @Tags posts
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Post ID"
+// @Security ApiKeyAuth
+// @param Authorization header string true "Authorization"
 // @Success 200 {object} domain.Post
 // @Router /post/get/{id} [get]
 func (h *Handler) GetById(c *gin.Context) {
@@ -124,15 +130,17 @@ func (h *Handler) GetById(c *gin.Context) {
 	c.JSON(http.StatusOK, posts)
 }
 
-// Update post by ID godoc
-// @Summary Get details of a post
-// @Description Get details of a post by ID
+// UpdateById post godoc
+// @Summary Update post by ID
+// @Description Update post by ID
 // @Tags posts
 // @Accept  json
 // @Produce  json
 // @Param updatePost body domain.UpdatePost true "update post"
+// @Security ApiKeyAuth
+// @param Authorization header string true "Authorization"
 // @Success 200 {object} domain.Post
-// @Router /post/update [post]
+// @Router /post/ [put]
 func (h *Handler) UpdateById(c *gin.Context) {
 	var post domain.UpdatePost
 	err := c.BindJSON(&post)
@@ -166,15 +174,17 @@ func (h *Handler) UpdateById(c *gin.Context) {
 	})
 }
 
-// Delete post by ID godoc
-// @Summary Delete a post
+// DeleteById post godoc
+// @Summary Delete a post by ID
 // @Description Delete a post by ID
 // @Tags posts
 // @Accept  json
 // @Produce  json
 // @Param id body domain.Post true "id"
-// @Success 200 {string} string "Post deleted"
-// @Router /post/delete [post]
+// @Security ApiKeyAuth
+// @param Authorization header string true "Authorization"
+// @Success 200 {string} string {"message": "deleted"}
+// @Router /post/ [delete]
 func (h *Handler) DeleteById(c *gin.Context) {
 	var post *domain.UpdatePost
 	err := c.BindJSON(&post)

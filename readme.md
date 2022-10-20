@@ -1,4 +1,4 @@
-# # Simple Note-taking App
+# # Simple REST API for Note-taking App witg auth 
 
 ### To run app
 
@@ -13,8 +13,19 @@ or
 ```bash
 docker compose --env-file .\configs\app.env up --build post-app
 ```
-
+To run with gRPC audit logger please run with grpc server @ https://github.com/Arkosh744/grpc-audit-log
 _________________________________________________
+# TESTs
+
+To run tests:
+
+```bash
+make test
+#or
+go test -v -count=1 ./...
+```
+
+
 
 # REST API:
 
@@ -136,4 +147,6 @@ _________________________________________________
 ### Swagger docs
 
 to update need to run command: swag init -g cmd/main.go
-![swagger.png](swagger.png)
+
+Example of usage: http://localhost:8080/swagger/index.html
+![img.png](swaggo_example.png)

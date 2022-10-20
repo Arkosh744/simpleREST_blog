@@ -1,16 +1,17 @@
-basePath: /
 definitions:
   domain.Post:
     properties:
+      AuthorId:
+        type: integer
       body:
         type: string
-      date:
+      createdAt:
         type: string
       id:
         type: integer
-      lastUpdated:
-        type: string
       title:
+        type: string
+      updatedAt:
         type: string
     type: object
   domain.PostQuery:
@@ -18,6 +19,37 @@ definitions:
       body:
         type: string
       title:
+        type: string
+    type: object
+  domain.SignInInput:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.SignUpInput:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 2
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  domain.Token:
+    properties:
+      token:
         type: string
     type: object
   domain.UpdatePost:
@@ -29,19 +61,107 @@ definitions:
       title:
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
-  description: This is a simple crud blog for note-taking
-  termsOfService: http://swagger.io/terms/
-  title: Note-taking API
-  version: "1.0"
 paths:
-  /post/all:
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh User Token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Token'
+      summary: Refresh User Token
+      tags:
+      - Auth
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: SignIn User
+      parameters:
+      - description: login user
+        in: body
+        name: SignIn_input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SignInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Token'
+      summary: SignIn User
+      tags:
+      - Auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: SignUp User
+      parameters:
+      - description: new user
+        in: body
+        name: SignUp_input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SignUpInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+      summary: SignUp User
+      tags:
+      - Auth
+  /post/:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post by ID
+      parameters:
+      - description: id
+        in: body
+        name: id
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Post'
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message": "deleted"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a post by ID
+      tags:
+      - posts
     get:
       consumes:
       - application/json
-      description: Get details of a post by ID
+      description: Get List of posts
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -53,29 +173,65 @@ paths:
                 $ref: '#/definitions/domain.Post'
               type: array
             type: array
-      summary: Get details of a post
+      security:
+      - ApiKeyAuth: []
+      summary: Get List of posts
       tags:
       - posts
-  /post/delete:
     post:
       consumes:
       - application/json
-      description: Delete a post by ID
+      description: Create new post with title and content
       parameters:
-      - description: id
+      - description: new post
         in: body
-        name: id
+        name: post
         required: true
         schema:
-          $ref: '#/definitions/domain.Post'
+          $ref: '#/definitions/domain.PostQuery'
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Post'
+      security:
+      - ApiKeyAuth: []
+      summary: Create new post
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      description: Update post by ID
+      parameters:
+      - description: update post
+        in: body
+        name: updatePost
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdatePost'
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Post deleted
+          description: OK
           schema:
-            type: string
-      summary: Delete a post
+            $ref: '#/definitions/domain.Post'
+      security:
+      - ApiKeyAuth: []
+      summary: Update post by ID
       tags:
       - posts
   /post/get/{id}:
@@ -89,28 +245,11 @@ paths:
         name: id
         required: true
         type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.Post'
-      summary: Get details of a post
-      tags:
-      - posts
-  /post/new:
-    post:
-      consumes:
-      - application/json
-      description: Create new post with title and content
-      parameters:
-      - description: new post
-        in: body
-        name: post
+      - description: Authorization
+        in: header
+        name: Authorization
         required: true
-        schema:
-          $ref: '#/definitions/domain.PostQuery'
+        type: string
       produces:
       - application/json
       responses:
@@ -118,28 +257,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/domain.Post'
-      summary: Create new post
-      tags:
-      - posts
-  /post/update:
-    post:
-      consumes:
-      - application/json
-      description: Get details of a post by ID
-      parameters:
-      - description: update post
-        in: body
-        name: updatePost
-        required: true
-        schema:
-          $ref: '#/definitions/domain.UpdatePost'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.Post'
+      security:
+      - ApiKeyAuth: []
       summary: Get details of a post
       tags:
       - posts

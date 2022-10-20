@@ -40,6 +40,14 @@ func NewHandler(posts Posts, users Users) *Handler {
 	}
 }
 
+// @title Post Service REST API
+// @version 1.0
+// @description This is a simple crud blog for posts
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @termsOfService http://swagger.io/terms/
+// @host localhost:8080
 func (h *Handler) InitRouter() *gin.Engine {
 	router := gin.New()
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

@@ -10,16 +10,111 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
         "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/post/all": {
+        "/auth/refresh": {
+            "post": {
+                "description": "Refresh User Token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh User Token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Token"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-in": {
+            "post": {
+                "description": "SignIn User",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "SignIn User",
+                "parameters": [
+                    {
+                        "description": "login user",
+                        "name": "SignIn_input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SignInInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Token"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "description": "SignUp User",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "SignUp User",
+                "parameters": [
+                    {
+                        "description": "new user",
+                        "name": "SignUp_input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SignUpInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/": {
             "get": {
-                "description": "Get details of a post by ID",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get List of posts",
                 "consumes": [
                     "application/json"
                 ],
@@ -29,7 +124,16 @@ const docTemplate = `{
                 "tags": [
                     "posts"
                 ],
-                "summary": "Get details of a post",
+                "summary": "Get List of posts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -44,11 +148,14 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/post/delete": {
-            "post": {
-                "description": "Delete a post by ID",
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update post by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -58,47 +165,22 @@ const docTemplate = `{
                 "tags": [
                     "posts"
                 ],
-                "summary": "Delete a post",
+                "summary": "Update post by ID",
                 "parameters": [
                     {
-                        "description": "id",
-                        "name": "id",
+                        "description": "update post",
+                        "name": "updatePost",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.Post"
+                            "$ref": "#/definitions/domain.UpdatePost"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Post deleted",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/post/get/{id}": {
-            "get": {
-                "description": "Get details of a post by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "posts"
-                ],
-                "summary": "Get details of a post",
-                "parameters": [
+                    },
                     {
-                        "type": "integer",
-                        "description": "Post ID",
-                        "name": "id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -110,10 +192,13 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/post/new": {
+            },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create new post with title and content",
                 "consumes": [
                     "application/json"
@@ -134,20 +219,76 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/domain.PostQuery"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/domain.Post"
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a post by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Delete a post by ID",
+                "parameters": [
+                    {
+                        "description": "id",
+                        "name": "id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.Post"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message\": \"deleted\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
-        "/post/update": {
-            "post": {
+        "/post/get/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get details of a post by ID",
                 "consumes": [
                     "application/json"
@@ -161,13 +302,18 @@ const docTemplate = `{
                 "summary": "Get details of a post",
                 "parameters": [
                     {
-                        "description": "update post",
-                        "name": "updatePost",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.UpdatePost"
-                        }
+                        "type": "integer",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -185,19 +331,22 @@ const docTemplate = `{
         "domain.Post": {
             "type": "object",
             "properties": {
+                "AuthorId": {
+                    "type": "integer"
+                },
                 "body": {
                     "type": "string"
                 },
-                "date": {
+                "createdAt": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "lastUpdated": {
+                "title": {
                     "type": "string"
                 },
-                "title": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -209,6 +358,51 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SignInInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "domain.SignUpInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "domain.Token": {
+            "type": "object",
+            "properties": {
+                "token": {
                     "type": "string"
                 }
             }
@@ -232,12 +426,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Note-taking API",
-	Description:      "This is a simple crud blog for note-taking",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }
