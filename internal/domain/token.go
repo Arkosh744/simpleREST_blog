@@ -8,3 +8,7 @@ type RefreshToken struct {
 	Token     string
 	ExpiresAt time.Time
 }
+
+type Token struct {
+	Token string `json:"token"`
+}

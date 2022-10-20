@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 )
 
 type ConnectionInfo struct {
@@ -15,8 +16,11 @@ type ConnectionInfo struct {
 }
 
 func NewPostgresConnection(info ConnectionInfo) (*sql.DB, error) {
-	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
-		info.Host, info.Port, info.Username, info.DBName, info.SSLMode, info.Password))
+	connectString := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
+		info.Host, info.Port, info.Username, info.DBName, info.SSLMode, info.Password)
+	log.Println(connectString)
+	db, err := sql.Open("postgres", connectString)
+
 	if err != nil {
 		return nil, err
 	}

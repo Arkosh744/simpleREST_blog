@@ -7,6 +7,15 @@ import (
 	"net/http"
 )
 
+// signUp godoc
+// @Summary SignUp User
+// @Description SignUp User
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param new SignUp_input body domain.SignUpInput true "new user"
+// @Success 201 {string} OK
+// @Router /auth/sign-up [post]
 func (h *Handler) signUp(c *gin.Context) {
 	var inp domain.SignUpInput
 	if err := c.BindJSON(&inp); err != nil {
@@ -31,6 +40,15 @@ func (h *Handler) signUp(c *gin.Context) {
 	c.JSON(http.StatusCreated, "OK")
 }
 
+// signIn godoc
+// @Summary SignIn User
+// @Description SignIn User
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param new SignIn_input body domain.SignInInput true "login user"
+// @Success 200 {object} domain.Token
+// @Router /auth/sign-in [post]
 func (h *Handler) signIn(c *gin.Context) {
 	var inp domain.SignInInput
 	if err := c.BindJSON(&inp); err != nil {
@@ -67,6 +85,14 @@ func (h *Handler) signIn(c *gin.Context) {
 	})
 }
 
+// refresh godoc
+// @Summary Refresh User Token
+// @Description Refresh User Token
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} domain.Token
+// @Router /auth/refresh [post]
 func (h *Handler) refresh(c *gin.Context) {
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {

@@ -25,7 +25,7 @@ func (r *Posts) Create(ctx context.Context, post domain.Post) (domain.Post, erro
 
 func (r *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 	var post domain.Post
-	err := r.db.QueryRowContext(ctx, "SELECT id, title, body, \"createdAt\", \"updatedAt\" FROM posts WHERE id=$1", id).
+	err := r.db.QueryRowContext(ctx, "SELECT id, title, body, createdAt, updatedAt FROM posts WHERE id=$1", id).
 		Scan(&post.Id, &post.Title, &post.Body, &post.CreatedAt, &post.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return post, domain.ErrPostNotFound
@@ -35,22 +35,22 @@ func (r *Posts) GetById(ctx context.Context, id int64) (domain.Post, error) {
 }
 
 func (r *Posts) List(ctx context.Context) ([]domain.Post, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT id, title, body, \"createdAt\", \"updatedAt\" FROM posts")
+	rows, err := r.db.QueryContext(ctx, "SELECT id, title, body, author_id, createdAt, updatedAt FROM posts")
 	if err != nil {
 		return nil, err
 	}
 
-	books := make([]domain.Post, 0)
+	posts := make([]domain.Post, 0)
 	for rows.Next() {
-		var book domain.Post
-		if err := rows.Scan(&book.Id, &book.Title, &book.Body, &book.CreatedAt, &book.UpdatedAt); err != nil {
+		var post domain.Post
+		if err := rows.Scan(&post.Id, &post.Title, &post.Body, &post.AuthorId, &post.CreatedAt, &post.UpdatedAt); err != nil {
 			return nil, err
 		}
 
-		books = append(books, book)
+		posts = append(posts, post)
 	}
 
-	return books, rows.Err()
+	return posts, rows.Err()
 }
 
 func (r *Posts) Delete(ctx context.Context, id int64) error {
@@ -82,7 +82,7 @@ func (r *Posts) Update(ctx context.Context, id int64, post domain.UpdatePost) (d
 		argId++
 	}
 
-	setValues = append(setValues, fmt.Sprintf("\"updatedAt\"=$%d", argId))
+	setValues = append(setValues, fmt.Sprintf("updatedAt=$%d", argId))
 	args = append(args, time.Now())
 	argId++
 
