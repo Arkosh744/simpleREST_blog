@@ -1,4 +1,13 @@
-# # Simple REST API for Note-taking App witg auth 
+# # Simple REST API for Note-taking App with auth 
+<img align="right" width="300" height="300" src="misc/img/img.png" alt="Gopher">
+This is Golang REST API server example including the following features:
+
+*   based on Go web framework - Gin (firstly write on go http)
+*   made with Clean Architecture in mind
+*   have services that work with PostgreSQL database
+*   includes controller go tests based on mocks auto-generated with go:generate and mockery
+*   Postman commands included aswell
+*   config based on env file with viper
 
 ### To run app
 
@@ -131,7 +140,7 @@ To update post by id:
   {
     "id": 1,
     "title": "web-develompent UPDATED",
-    "body": "THIS IS PYTHON",
+    "body": "THIS IS PYTHON"
   }
 ]
 ```
@@ -149,4 +158,4 @@ _________________________________________________
 to update need to run command: swag init -g cmd/main.go
 
 Example of usage: http://localhost:8080/swagger/index.html
-![img.png](swaggo_example.png)
+![img.png](misc/img/swaggo_example.png)
