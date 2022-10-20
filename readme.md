@@ -1,5 +1,5 @@
-# # Simple REST API for Note-taking App with auth 
-<img align="right" width="300" height="300" src="misc/img/img.png" alt="Gopher">
+## Simple REST API for Note-taking App with auth 
+<img align="right" src="misc/img/gopher.png" alt="Gopher">
 This is Golang REST API server example including the following features:
 
 *   based on Go web framework - Gin (firstly write on go http)
