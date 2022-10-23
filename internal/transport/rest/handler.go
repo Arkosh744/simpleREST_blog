@@ -28,6 +28,13 @@ type Users interface {
 	GetIdByToken(ctx context.Context, refreshToken string) (int64, error)
 }
 
+//type Files interface {
+//	Upload(ctx context.Context, file domain.UploadFile) error
+//	GetById(ctx context.Context, id int64, userId int64) (domain.UploadFile, error)
+//	List(ctx context.Context, userId int64) ([]domain.UploadFile, error)
+//	Delete(ctx context.Context, id int64, userId int64) error
+//}
+
 type Handler struct {
 	postsService Posts
 	usersService Users
@@ -50,6 +57,8 @@ func NewHandler(posts Posts, users Users) *Handler {
 // @host localhost:8080
 func (h *Handler) InitRouter() *gin.Engine {
 	router := gin.New()
+	// Set a lower memory limit for multipart forms (default is 32 MiB)
+	router.MaxMultipartMemory = 8 << 20 // 8 MiB
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	auth := router.Group("/auth")
 	{
@@ -65,6 +74,14 @@ func (h *Handler) InitRouter() *gin.Engine {
 		post.GET("/:id", h.GetById)
 		post.PUT("", h.UpdateById)
 		post.DELETE("", h.DeleteById)
+	}
+	file := router.Group("/file")
+	{
+		file.Use(h.authMiddleware())
+		file.POST("", h.UploadFile)
+		//file.GET("/", h.ListFile)
+		//file.GET("/:id", h.GetFile)
+		//file.GET("/:id", h.DeleteFile)
 	}
 	router.Use(loggerMiddleware())
 	return router
