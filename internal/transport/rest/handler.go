@@ -28,22 +28,24 @@ type Users interface {
 	GetIdByToken(ctx context.Context, refreshToken string) (int64, error)
 }
 
-//type Files interface {
-//	Upload(ctx context.Context, file domain.UploadFile) error
-//	GetById(ctx context.Context, id int64, userId int64) (domain.UploadFile, error)
-//	List(ctx context.Context, userId int64) ([]domain.UploadFile, error)
-//	Delete(ctx context.Context, id int64, userId int64) error
-//}
+type Files interface {
+	Upload(ctx context.Context, file domain.UploadFile) error
+	GetById(ctx context.Context, id int64, userId int64) (domain.UploadFile, error)
+	List(ctx context.Context, userId int64) ([]domain.UploadFile, error)
+	Delete(ctx context.Context, id int64, userId int64) error
+}
 
 type Handler struct {
 	postsService Posts
 	usersService Users
+	filesService Files
 }
 
-func NewHandler(posts Posts, users Users) *Handler {
+func NewHandler(posts Posts, users Users, files Files) *Handler {
 	return &Handler{
 		postsService: posts,
 		usersService: users,
+		filesService: files,
 	}
 }
 

@@ -19,3 +19,15 @@ func (r *Files) Upload(ctx context.Context, file domain.UploadFile) (domain.Uplo
 		file.Name, file.AuthorId, file.Comment).Scan(&file.Id, &file.CreatedAt)
 	return file, err
 }
+
+func (r *Files) GetById(ctx context.Context, id int64, userId int64) (domain.UploadFile, error) {
+	return domain.UploadFile{}, nil
+}
+
+func (r *Files) List(ctx context.Context, userId int64) ([]domain.UploadFile, error) {
+	return []domain.UploadFile{}, nil
+}
+
+func (r *Files) Delete(ctx context.Context, id int64, userId int64) error {
+	return nil
+}

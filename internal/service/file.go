@@ -12,6 +12,9 @@ import (
 
 type FilesRepository interface {
 	Upload(ctx context.Context, file domain.UploadFile) (domain.UploadFile, error)
+	GetById(ctx context.Context, id int64, userId int64) (domain.UploadFile, error)
+	List(ctx context.Context, userId int64) ([]domain.UploadFile, error)
+	Delete(ctx context.Context, id int64, userId int64) error
 }
 
 type Files struct {
@@ -20,21 +23,20 @@ type Files struct {
 	auditClient AuditClient
 }
 
-func NewFiles(repo FilesRepository, cache *customCache.Cache, auditClient AuditClient) *Files {
+func NewFiles(repo FilesRepository, auditClient AuditClient) *Files {
 	return &Files{
 		repo:        repo,
-		cache:       cache,
 		auditClient: auditClient,
 	}
 }
 
-func (p *Files) Upload(ctx context.Context, file domain.UploadFile) error {
-	newfile, err := p.repo.Upload(ctx, file)
+func (f *Files) Upload(ctx context.Context, file domain.UploadFile) error {
+	newfile, err := f.repo.Upload(ctx, file)
 	if err != nil {
 		return err
 	}
 
-	if err := p.auditClient.SendLogRequest(ctx, audit.LogItem{
+	if err := f.auditClient.SendLogRequest(ctx, audit.LogItem{
 		Action:   audit.ACTION_CREATE,
 		Entity:   audit.ENTITY_POST,
 		EntityID: newfile.Id,
@@ -46,5 +48,17 @@ func (p *Files) Upload(ctx context.Context, file domain.UploadFile) error {
 		}).Error("failed to send log request:", err)
 	}
 
+	return nil
+}
+
+func (f *Files) GetById(ctx context.Context, id int64, userId int64) (domain.UploadFile, error) {
+	return domain.UploadFile{}, nil
+}
+
+func (f *Files) List(ctx context.Context, userId int64) ([]domain.UploadFile, error) {
+	return []domain.UploadFile{}, nil
+}
+
+func (f *Files) Delete(ctx context.Context, id int64, userId int64) error {
 	return nil
 }

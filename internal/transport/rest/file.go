@@ -6,13 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 )
 
 func (h *Handler) UploadFile(c *gin.Context) {
 	var uploadedFile domain.UploadForm
-	err := c.ShouldBind(&uploadedFile)
 
-	if err != nil {
+	if err := c.ShouldBind(&uploadedFile); err != nil {
 		log.WithFields(log.Fields{"handler": "FileUpload"}).Error(err)
 		c.JSON(http.StatusBadRequest, map[string]string{
 			"message": "invalid input body",
@@ -25,6 +25,7 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		})
 		return
 	}
+
 	cookie, err := c.Cookie("refresh-token")
 	if err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
@@ -36,19 +37,43 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	uploadedFile.Json.AuthorId, err = h.usersService.GetIdByToken(c, cookie)
 
 	file, _ := c.FormFile("file")
-	uploadedFile.Json.Name = file.Filename
-	// TODO: check folder, create sub folders by author id
-	// TODO: check file size
-	// TODO: check name for existing files
-	// TODO: if filename exists => error
-	// TODO: if ok => add info to db and save file
-
-	fmt.Println(file.Header.Values("Content-Type")[0])
-	fmt.Println(uploadedFile)
-	dst := fmt.Sprintf("./file_folder/%s", file.Filename)
-	err = c.SaveUploadedFile(file, dst)
-	if err != nil {
+	if file.Size>>20 > 10 {
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "file is too big. Limit is 10MB",
+		})
 		return
 	}
-	c.String(http.StatusOK, fmt.Sprintf("file '%s' uploaded!", file.Filename))
+
+	uploadedFile.Json.Name = file.Filename
+	path := fmt.Sprintf("./saved_files/%v", uploadedFile.Json.AuthorId)
+	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		log.Println(err)
+	}
+	dst := fmt.Sprintf("%s/%s", path, file.Filename)
+	if _, err = os.Stat(dst); err == nil {
+		c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "file with this name already exists",
+		})
+		return
+	}
+
+	if err = h.filesService.Upload(c, uploadedFile.Json); err != nil {
+		log.WithFields(log.Fields{"handler": "FileUpload"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
+	if err = c.SaveUploadedFile(file, dst); err != nil {
+		log.WithFields(log.Fields{"handler": "FileUpload"}).Error(err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusBadRequest, map[string]string{
+		"message": file.Filename + " uploaded",
+	})
 }

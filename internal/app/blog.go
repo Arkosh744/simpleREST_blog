@@ -55,6 +55,7 @@ func Run() error {
 	handlerCache := cache.NewCache()
 	usersRepo := repository.NewUsers(db)
 	tokensRepo := repository.NewTokens(db)
+	filesRepo := repository.NewFiles(db)
 
 	auditClient, err := grpc_client.NewClient(9000)
 	if err != nil {
@@ -62,8 +63,9 @@ func Run() error {
 	}
 	postService := service.NewPosts(postsRepo, handlerCache, auditClient)
 	usersService := service.NewUsers(usersRepo, tokensRepo, auditClient, hasher, []byte(cfg.JWTSecret))
+	fileService := service.NewFiles(filesRepo, auditClient)
 
-	handler := rest.NewHandler(postService, usersService)
+	handler := rest.NewHandler(postService, usersService, fileService)
 
 	// init & run server
 	srv := &http.Server{
