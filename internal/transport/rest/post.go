@@ -39,6 +39,13 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 	post.AuthorId, err = h.usersService.GetIdByToken(c, cookie)
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
 
 	if err := h.postsService.Create(c, post); err != nil {
 		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
@@ -72,7 +79,14 @@ func (h *Handler) List(c *gin.Context) {
 		})
 		return
 	}
-	userId, _ := h.usersService.GetIdByToken(c, cookie)
+	userId, err := h.usersService.GetIdByToken(c, cookie)
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
 
 	posts, err := h.postsService.List(c, userId)
 	if err != nil {
@@ -117,7 +131,14 @@ func (h *Handler) GetById(c *gin.Context) {
 		})
 		return
 	}
-	userId, _ := h.usersService.GetIdByToken(c, cookie)
+	userId, err := h.usersService.GetIdByToken(c, cookie)
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
 
 	posts, err := h.postsService.GetById(c, id, userId)
 	if err != nil {
@@ -160,7 +181,14 @@ func (h *Handler) UpdateById(c *gin.Context) {
 		})
 		return
 	}
-	userId, _ := h.usersService.GetIdByToken(c, cookie)
+	userId, err := h.usersService.GetIdByToken(c, cookie)
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
 
 	if err := h.postsService.Update(c, post.Id, post, userId); err != nil {
 		log.WithFields(log.Fields{"handler": "UpdatePostById"}).Error(err)
@@ -204,7 +232,14 @@ func (h *Handler) DeleteById(c *gin.Context) {
 		})
 		return
 	}
-	userId, _ := h.usersService.GetIdByToken(c, cookie)
+	userId, err := h.usersService.GetIdByToken(c, cookie)
+	if err != nil {
+		log.WithFields(log.Fields{"handler": "NewPost"}).Error(err)
+		c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": err.Error(),
+		})
+		return
+	}
 
 	if err := h.postsService.Delete(c, post.Id, userId); err != nil {
 		log.WithFields(log.Fields{"handler": "DeletePostById"}).Error(err)

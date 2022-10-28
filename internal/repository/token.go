@@ -27,6 +27,9 @@ func (r *Tokens) Get(ctx context.Context, token string) (domain.RefreshToken, er
 	log.Println(token)
 	err := r.db.QueryRowContext(ctx, "SELECT id, user_id, token, expires_at FROM refresh_tokens WHERE token=$1", token).
 		Scan(&t.ID, &t.UserID, &t.Token, &t.ExpiresAt)
+	if err != nil {
+		return t, err
+	}
 
 	_, err = r.db.ExecContext(ctx, "DELETE FROM refresh_tokens WHERE id=$1", t.UserID)
 

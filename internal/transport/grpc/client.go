@@ -3,6 +3,7 @@ package grpc_client
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/credentials/insecure"
 
 	audit "github.com/Arkosh744/grpc-audit-log/pkg/domain"
 	"google.golang.org/grpc"
@@ -18,8 +19,7 @@ func NewClient(port int) (*Client, error) {
 	var conn *grpc.ClientConn
 
 	addr := fmt.Sprintf(":%d", port)
-
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	cache "github.com/Arkosh744/FirstCache"
 	"github.com/Arkosh744/simpleREST_blog/internal/config"
 	"github.com/Arkosh744/simpleREST_blog/internal/repository"
@@ -76,8 +77,7 @@ func Run() error {
 		// service connections
 		log.Info("Starting Server at port " + cfg.SrvPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("listen: %s\n", err)
-			log.Info("SERVER STARTED")
+			log.Fatal(fmt.Sprintf("listen: %s\n", err))
 		}
 	}()
 
@@ -92,11 +92,10 @@ func Run() error {
 	if err := srv.Shutdown(ctx); err != nil {
 		return err
 	}
-	// catching ctx.Done(). timeout of 5 seconds.
-	select {
-	case <-ctx.Done():
-		log.Println("timeout of 5 seconds.")
-	}
+	// catching ctx.Done(). timeout of 1 seconds.
+
+	log.Println("timeout of 5 seconds.")
+	<-ctx.Done()
 	log.Println("Server exiting")
 	return nil
 }
