@@ -8,3 +8,5 @@ migratedown:
 	migrate -path schemes/postgres/down -database "postgresql://postgres:docker@localhost:5432/postgres?sslmode=disable" -verbose down
 run:
 	docker compose --env-file .\configs\app.env up --build post-app
+lint:
+	golangci-lint run
